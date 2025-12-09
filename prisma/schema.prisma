@@ -1,0 +1,300 @@
+// This is your Prisma schema file
+// For more info: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String?   @unique
+  name          String?
+  avatar        String?
+  password      String?   // hashed
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  ghostProfile  GhostProfile?
+  tasks         Task[]
+  notes         Note[]
+  streaks       Streak[]
+  xpHistory     XPHistory[]
+  cryptoPortfolio CryptoPortfolio[]
+  gameStats     GameStats[]
+  businessData  BusinessData?
+  moodLogs      MoodLog[]
+  
+  @@map("users")
+}
+
+// ============================================
+// GHOST AI CORE
+// ============================================
+
+model GhostProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Ghost Personality
+  personality     String   @default("chill") // chill, funny, strict, motivational, quiet
+  tone            String   @default("friendly")
+  
+  // Ghost XP & Leveling
+  totalXP         Int      @default(0)
+  level           Int      @default(1)
+  xpToNextLevel   Int      @default(100)
+  
+  // Ghost Evolution
+  evolutionStage  Int      @default(1)
+  avatarStyle     String   @default("basic")
+  
+  // User Preferences
+  mainFocusAreas  String[] // school, productivity, crypto, gaming, etc.
+  timezone        String   @default("Africa/Lagos")
+  
+  // Behavioral Data
+  isMorningPerson Boolean  @default(false)
+  procrastinates  Boolean  @default(false)
+  motivationStyle String   @default("positive")
+  
+  // Ghost Room
+  roomTheme       String   @default("default")
+  roomItems       String[] // unlocked decorations
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("ghost_profiles")
+}
+
+// ============================================
+// GHOST XP & GAMIFICATION
+// ============================================
+
+model XPHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  amount      Int      // positive or negative
+  reason      String   // "completed_task", "studied_30min", "wasted_time"
+  category    String   // school, productivity, gaming, crypto, etc.
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@map("xp_history")
+}
+
+model Streak {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        String   // study, sleep, productivity, fitness, crypto
+  count       Int      @default(0)
+  lastUpdated DateTime @default(now())
+  isActive    Boolean  @default(true)
+  
+  @@unique([userId, type])
+  @@map("streaks")
+}
+
+// ============================================
+// SCHOOL & LEARNING
+// ============================================
+
+model Note {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title       String
+  content     String   @db.Text
+  subject     String?
+  
+  // AI Generated Data
+  summary     String?  @db.Text
+  keyPoints   String[] // extracted key points
+  flashcards  Json?    // auto-generated flashcards
+  
+  // Media
+  imageUrl    String?  // scanned note image
+  
+  tags        String[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@map("notes")
+}
+
+// ============================================
+// PRODUCTIVITY
+// ============================================
+
+model Task {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String?   @db.Text
+  category    String    // school, work, personal, fitness
+  priority    String    @default("medium") // low, medium, high
+  
+  status      String    @default("pending") // pending, in_progress, completed
+  
+  dueDate     DateTime?
+  completedAt DateTime?
+  
+  // XP Reward
+  xpReward    Int       @default(10)
+  
+  // Time Blocking
+  scheduledAt DateTime?
+  duration    Int?      // minutes
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([userId, status])
+  @@map("tasks")
+}
+
+// ============================================
+// CRYPTO PORTFOLIO
+// ============================================
+
+model CryptoPortfolio {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  coinSymbol  String   // BTC, ETH, SOL
+  coinName    String
+  amount      Float
+  buyPrice    Float
+  currentPrice Float?
+  
+  walletAddress String?
+  
+  profitLoss  Float?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@map("crypto_portfolio")
+}
+
+// ============================================
+// GAMING
+// ============================================
+
+model GameStats {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  gameName    String   // COD Mobile, PUBG, etc.
+  
+  // Stats
+  accuracy    Float?
+  kdRatio     Float?
+  winRate     Float?
+  rank        String?
+  
+  // Sensitivity
+  sensitivity Json?    // recommended settings
+  
+  lastPlayed  DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, gameName])
+  @@map("game_stats")
+}
+
+// ============================================
+// BUSINESS
+// ============================================
+
+model BusinessData {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  businessName String?
+  businessType String?
+  
+  revenue     Float    @default(0)
+  expenses    Float    @default(0)
+  profit      Float    @default(0)
+  
+  ideas       Json?    // business ideas & analysis
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("business_data")
+}
+
+// ============================================
+// WELLNESS
+// ============================================
+
+model MoodLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  mood        String   // happy, stressed, tired, motivated
+  energy      Int      // 1-10
+  stress      Int      // 1-10
+  
+  sleepHours  Float?
+  
+  notes       String?  @db.Text
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@map("mood_logs")
+}
+
+// ============================================
+// GHOST MEMORY (AI Context)
+// ============================================
+
+model GhostMemory {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  memoryType  String   // short_term, long_term, behavioral
+  content     String   @db.Text
+  context     Json?
+  
+  importance  Int      @default(1) // 1-10
+  
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+  
+  @@index([userId, memoryType])
+  @@map("ghost_memory")
+}
