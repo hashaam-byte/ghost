@@ -69,7 +69,7 @@ export default function GhostLanding() {
           <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
             Your AI
             <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-              Live Twin
+              Life Twin
             </span>
           </h1>
 
