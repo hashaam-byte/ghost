@@ -6,9 +6,12 @@ const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await params in Next.js 15+
+    const params = await context.params;
+    
     const authHeader = request.headers.get('authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
