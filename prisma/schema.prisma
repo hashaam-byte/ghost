@@ -22,6 +22,11 @@ model User {
   avatar        String?
   password      String?   // hashed
   
+  // Subscription
+  plan          String    @default("free") // free, pro
+  planExpiry    DateTime?
+  isStudent     Boolean   @default(false)
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
@@ -35,6 +40,8 @@ model User {
   gameStats     GameStats[]
   businessData  BusinessData?
   moodLogs      MoodLog[]
+  subscription  Subscription?
+  usageStats    UsageStats?
   
   @@map("users")
 }
@@ -297,4 +304,81 @@ model GhostMemory {
   
   @@index([userId, memoryType])
   @@map("ghost_memory")
+}
+
+// ============================================
+// SUBSCRIPTION & BILLING
+// ============================================
+
+model Subscription {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  plan        String   // free, pro
+  status      String   @default("active") // active, expired, cancelled
+  
+  // Billing
+  amount      Float?
+  currency    String   @default("NGN")
+  interval    String?  // month, year
+  
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  
+  // Payment
+  paymentMethod String?
+  lastPaymentDate DateTime?
+  nextBillingDate DateTime?
+  
+  // Student discount
+  isStudent   Boolean  @default(false)
+  studentVerified Boolean @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("subscriptions")
+}
+
+model UsageStats {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Daily usage counters (reset at midnight)
+  chatCount   Int      @default(0)
+  scanCount   Int      @default(0)
+  schoolScanCount Int  @default(0)
+  
+  lastResetDate DateTime @default(now())
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("usage_stats")
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  amount      Float
+  currency    String   @default("NGN")
+  
+  plan        String   // pro
+  interval    String   // month, year
+  
+  status      String   // pending, success, failed
+  
+  // Payment gateway data
+  reference   String   @unique
+  gateway     String   // paystack, flutterwave
+  
+  metadata    Json?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@map("payments")
 }

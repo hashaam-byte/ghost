@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 export default function GhostLanding() {
   const [scrollY, setScrollY] = useState(0);
@@ -37,19 +38,25 @@ export default function GhostLanding() {
 
       {/* Navigation */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 text-2xl font-bold">
+        <Link href="/" className="flex items-center gap-2 text-2xl font-bold hover:scale-105 transition">
           <span className="text-4xl">👻</span>
           <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
             Ghost
           </span>
-        </div>
+        </Link>
         <div className="flex gap-4">
-          <button className="px-4 py-2 rounded-lg hover:bg-white/10 transition">
+          <Link 
+            href="/auth/signin"
+            className="px-4 py-2 rounded-lg hover:bg-white/10 transition"
+          >
             Sign In
-          </button>
-          <button className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition">
+          </Link>
+          <Link 
+            href="/auth/signup"
+            className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition"
+          >
             Get Started
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -79,12 +86,18 @@ export default function GhostLanding() {
           </p>
 
           <div className="flex gap-4 justify-center mb-12">
-            <button className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-lg font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition transform hover:scale-105">
+            <Link 
+              href="/auth/signup"
+              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-lg font-semibold hover:shadow-2xl hover:shadow-purple-500/50 transition transform hover:scale-105"
+            >
               Start Free ✨
-            </button>
-            <button className="px-8 py-4 border border-purple-500/50 rounded-xl text-lg font-semibold hover:bg-purple-500/10 transition">
+            </Link>
+            <Link 
+              href="/auth/signin"
+              className="px-8 py-4 border border-purple-500/50 rounded-xl text-lg font-semibold hover:bg-purple-500/10 transition"
+            >
               Watch Demo 🎬
-            </button>
+            </Link>
           </div>
 
           {/* Stats */}
@@ -215,9 +228,12 @@ export default function GhostLanding() {
         <p className="text-xl text-slate-300 mb-8">
           Join thousands of Gen-Z users who are already winning with Ghost
         </p>
-        <button className="px-12 py-5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-xl font-bold hover:shadow-2xl hover:shadow-purple-500/50 transition transform hover:scale-105">
+        <Link 
+          href="/auth/signup"
+          className="inline-block px-12 py-5 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-xl font-bold hover:shadow-2xl hover:shadow-purple-500/50 transition transform hover:scale-105"
+        >
           Get Started Free 👻
-        </button>
+        </Link>
       </section>
 
       {/* Footer */}
