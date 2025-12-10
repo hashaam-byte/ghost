@@ -19,7 +19,7 @@ export default function GhostInsightsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [weeklyReport, setWeeklyReport] = useState<any>(null);
-  const isPro = user?.plan === 'pro';
+  const isPro = (user as { plan?: string } | undefined)?.plan === 'pro';
 
   useEffect(() => {
     fetchInsights();
