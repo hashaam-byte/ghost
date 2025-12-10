@@ -10,6 +10,38 @@ export default function DashboardPage() {
   const router = useRouter();
   const [lockedFeature, setLockedFeature] = useState<string | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [stats, setStats] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/auth/signin');
+    }
+  }, [user, isLoading, router]);
+
+  useEffect(() => {
+    if (user && !user.isGuest) {
+      fetchStats();
+    }
+  }, [user]);
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/dashboard/stats', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -51,7 +83,8 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
-  const isPro = 'plan' in user && (user as any).plan === 'pro';
+  // 'plan' may not be present on the User type; use a safe access to avoid TypeScript errors.
+  const isPro = (user as any)?.plan === 'pro';
 
   const modules = [
     { id: 'chat', icon: '💬', title: 'Ghost Chat', desc: 'Talk to your AI twin', isPro: false, badge: null },

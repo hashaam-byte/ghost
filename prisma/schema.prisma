@@ -22,6 +22,9 @@ model User {
   avatar        String?
   password      String?   // hashed
   
+  // Guest user flag
+  isGuest       Boolean   @default(false)
+  
   // Subscription
   plan          String    @default("free") // free, pro
   planExpiry    DateTime?
@@ -42,6 +45,7 @@ model User {
   moodLogs      MoodLog[]
   subscription  Subscription?
   usageStats    UsageStats?
+  chatMessages  ChatMessage[]
   
   @@map("users")
 }
@@ -98,11 +102,11 @@ model XPHistory {
   
   amount      Int      // positive or negative
   reason      String   // "completed_task", "studied_30min", "wasted_time"
-  category    String   // school, productivity, gaming, crypto, etc.
+  category    String   // school, productivity, gaming, crypto, social, etc.
   
   createdAt   DateTime @default(now())
   
-  @@index([userId])
+  @@index([userId, createdAt])
   @@map("xp_history")
 }
 
@@ -117,7 +121,30 @@ model Streak {
   isActive    Boolean  @default(true)
   
   @@unique([userId, type])
+  @@index([userId])
   @@map("streaks")
+}
+
+// ============================================
+// CHAT & CONVERSATIONS
+// ============================================
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  role        String   // user, assistant
+  content     String   @db.Text
+  
+  // Optional metadata
+  xpAwarded   Int?
+  category    String?  // For context tracking
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@map("chat_messages")
 }
 
 // ============================================
@@ -146,8 +173,54 @@ model Note {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([userId, subject])
   @@map("notes")
+}
+
+model HomeworkSolution {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  problem     String   @db.Text
+  subject     String
+  solution    String   @db.Text
+  
+  xpAwarded   Int      @default(15)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([userId, subject])
+  @@map("homework_solutions")
+}
+
+// ============================================
+// SCANNING & ANALYSIS
+// ============================================
+
+model Scan {
+  id            String   @id @default(cuid())
+  userId        String
+  
+  scanType      String   // screenshot, document, general
+  description   String   @db.Text
+  context       String?  @db.Text
+  
+  // Analysis results
+  analysis      String   @db.Text
+  redFlags      String[] // detected issues
+  tone          String?  // neutral, suspicious, safe
+  recommendation String? @db.Text
+  threatLevel   String?  // low, medium, high
+  
+  xpAwarded     Int      @default(5)
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([userId, scanType])
+  @@map("scans")
 }
 
 // ============================================
@@ -171,6 +244,7 @@ model Task {
   
   // XP Reward
   xpReward    Int       @default(10)
+  xpAwarded   Boolean   @default(false) // Track if XP was already given
   
   // Time Blocking
   scheduledAt DateTime?
@@ -180,6 +254,8 @@ model Task {
   updatedAt   DateTime  @updatedAt
   
   @@index([userId, status])
+  @@index([userId, dueDate])
+  @@index([userId, createdAt])
   @@map("tasks")
 }
 
@@ -201,11 +277,13 @@ model CryptoPortfolio {
   walletAddress String?
   
   profitLoss  Float?
+  profitLossPercent Float?
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   @@index([userId])
+  @@index([userId, coinSymbol])
   @@map("crypto_portfolio")
 }
 
@@ -235,6 +313,7 @@ model GameStats {
   updatedAt   DateTime @updatedAt
   
   @@unique([userId, gameName])
+  @@index([userId])
   @@map("game_stats")
 }
 
@@ -281,7 +360,7 @@ model MoodLog {
   
   createdAt   DateTime @default(now())
   
-  @@index([userId])
+  @@index([userId, createdAt])
   @@map("mood_logs")
 }
 
@@ -303,6 +382,7 @@ model GhostMemory {
   expiresAt   DateTime?
   
   @@index([userId, memoryType])
+  @@index([userId, expiresAt])
   @@map("ghost_memory")
 }
 
@@ -351,6 +431,11 @@ model UsageStats {
   scanCount   Int      @default(0)
   schoolScanCount Int  @default(0)
   
+  // Limits
+  chatLimit   Int      @default(50)   // Free tier limit
+  scanLimit   Int      @default(10)   // Free tier limit
+  schoolScanLimit Int  @default(5)    // Free tier limit
+  
   lastResetDate DateTime @default(now())
   
   createdAt   DateTime @default(now())
@@ -380,5 +465,31 @@ model Payment {
   createdAt   DateTime @default(now())
   
   @@index([userId])
+  @@index([reference])
+  @@index([status])
   @@map("payments")
+}
+
+// ============================================
+// SYNC & OFFLINE SUPPORT
+// ============================================
+
+model SyncLog {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  entityType  String   // task, note, chat, etc.
+  entityId    String
+  operation   String   // create, update, delete
+  
+  data        Json?
+  
+  synced      Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  syncedAt    DateTime?
+  
+  @@index([userId, synced])
+  @@index([userId, createdAt])
+  @@map("sync_logs")
 }
