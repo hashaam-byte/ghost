@@ -6,9 +6,12 @@ const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await params in Next.js 15+
+    const params = await context.params;
+    
     const authHeader = request.headers.get('authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -49,12 +52,21 @@ export async function POST(
       );
     }
 
+    // Check if XP was already awarded (prevents double rewards)
+    if (task.xpAwarded) {
+      return NextResponse.json(
+        { message: 'Task already completed and XP awarded' },
+        { status: 400 }
+      );
+    }
+
     // Update task
     const updatedTask = await db.task.update({
       where: { id: taskId },
       data: {
         status: 'completed',
         completedAt: new Date(),
+        xpAwarded: true, // Mark XP as awarded
       },
     });
 
@@ -76,12 +88,14 @@ export async function POST(
     if (ghostProfile) {
       const newTotalXP = ghostProfile.totalXP + task.xpReward;
       const newLevel = Math.floor(newTotalXP / 100) + 1;
+      const xpToNextLevel = (newLevel * 100) - newTotalXP;
 
       await db.ghostProfile.update({
         where: { userId: decoded.userId },
         data: {
           totalXP: newTotalXP,
           level: newLevel,
+          xpToNextLevel: xpToNextLevel,
         },
       });
     }
@@ -138,6 +152,7 @@ async function updateProductivityStreak(userId: string) {
         data: {
           count: { increment: 1 },
           lastUpdated: now,
+          isActive: true,
         }
       });
     } else {
@@ -147,6 +162,7 @@ async function updateProductivityStreak(userId: string) {
         data: {
           count: 1,
           lastUpdated: now,
+          isActive: false, // Mark as broken
         }
       });
     }
