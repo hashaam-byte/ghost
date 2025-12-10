@@ -34,6 +34,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Check if we're in browser
+        if (typeof window === 'undefined') {
+          setIsLoading(false);
+          return;
+        }
+
         const token = localStorage.getItem('auth_token');
         const guestMode = localStorage.getItem('guest_mode');
         const guestExpiry = localStorage.getItem('guest_expiry');
@@ -111,7 +117,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { user: userData, token } = await response.json();
-      localStorage.setItem('auth_token', token);
+      
+      // Store token in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', token);
+      }
+      
       setUser({ ...userData, isGuest: false });
       router.push('/dashboard');
     } catch (error) {
@@ -133,7 +144,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { user: userData, token } = await response.json();
-      localStorage.setItem('auth_token', token);
+      
+      // Store token in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', token);
+      }
+      
       setUser({ ...userData, isGuest: false });
       router.push('/onboarding');
     } catch (error) {

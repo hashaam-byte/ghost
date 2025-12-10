@@ -21,7 +21,20 @@ export default function DashboardPage() {
     if (isPro && (user as any)?.plan === 'free') {
       setLockedFeature(feature);
     } else {
-      router.push(`/dashboard/${feature}`);
+      // Map feature IDs to actual routes
+      const routeMap: Record<string, string> = {
+        'chat': '/dashboard/chat',
+        'scan': '/dashboard/scan',
+        'school': '/dashboard/school',
+        'tasks': '/dashboard/tasks',
+        'insights': '/dashboard/insights',
+        'ghostBusiness': '/dashboard/business',
+        'ghostCrypto': '/dashboard/crypto',
+        'voice': '/dashboard/chat', // Voice mode is in chat
+      };
+      
+      const route = routeMap[feature] || '/dashboard';
+      router.push(route);
     }
   };
 
@@ -38,7 +51,7 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
-  const isPro = (user as any)?.plan === 'pro';
+  const isPro = 'plan' in user && (user as any).plan === 'pro';
 
   const modules = [
     { id: 'chat', icon: '💬', title: 'Ghost Chat', desc: 'Talk to your AI twin', isPro: false, badge: null },
