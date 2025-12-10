@@ -2,22 +2,11 @@
 
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-
-// Mock auth functions for demo
-const mockAuth = {
-  signIn: async (email: string, password: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (email && password) {
-      console.log('Signed in:', email);
-    }
-  },
-  signInAsGuest: () => {
-    console.log('Guest sign in');
-  }
-};
+import { useAuth } from '@/src/lib/auth-context';
+import Link from 'next/link';
 
 export default function SignInPage() {
-  const { signIn, signInAsGuest } = mockAuth;
+  const { signIn, signInAsGuest } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -53,12 +42,12 @@ export default function SignInPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <a href="/" className="inline-flex items-center gap-2 text-3xl font-bold hover:scale-105 transition">
+          <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold hover:scale-105 transition">
             <span className="text-5xl">👻</span>
             <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Ghost
             </span>
-          </a>
+          </Link>
           <p className="text-slate-400 mt-2">Welcome back to your AI Life Twin</p>
         </div>
 
@@ -72,7 +61,7 @@ export default function SignInPage() {
             </div>
           )}
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Email
@@ -83,6 +72,7 @@ export default function SignInPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
                 placeholder="you@example.com"
+                required
               />
             </div>
 
@@ -97,6 +87,7 @@ export default function SignInPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-3 pr-12 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
                   placeholder="••••••••"
+                  required
                 />
                 <button
                   type="button"
@@ -117,19 +108,19 @@ export default function SignInPage() {
                 <input type="checkbox" className="mr-2 rounded" />
                 Remember me
               </label>
-              <a href="/auth/forgot-password" className="text-purple-400 hover:text-purple-300">
+              <Link href="/auth/forgot-password" className="text-purple-400 hover:text-purple-300">
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={isLoading}
               className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-purple-500/50 transition transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
-          </div>
+          </form>
 
           {/* Divider */}
           <div className="relative my-6">
@@ -166,9 +157,9 @@ export default function SignInPage() {
           {/* Sign Up Link */}
           <p className="text-center text-slate-400 mt-6">
             Don't have an account?{' '}
-            <a href="/auth/signup" className="text-purple-400 hover:text-purple-300 font-semibold">
+            <Link href="/auth/signup" className="text-purple-400 hover:text-purple-300 font-semibold">
               Sign Up
-            </a>
+            </Link>
           </p>
         </div>
 

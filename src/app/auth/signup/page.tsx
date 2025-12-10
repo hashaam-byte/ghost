@@ -2,17 +2,8 @@
 
 import { useState } from 'react';
 import { Eye, EyeOff, Sparkles } from 'lucide-react';
-
-// Mock auth functions for demo
-const mockAuth = {
-  signUp: async (email: string, password: string, username: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('Signed up:', { email, username });
-  },
-  signInAsGuest: () => {
-    console.log('Guest sign in');
-  }
-};
+import { useAuth } from '@/src/lib/auth-context';
+import Link from 'next/link';
 
 // Username generator
 const adjectives = ['Cool', 'Ghost', 'Cyber', 'Swift', 'Cosmic', 'Epic', 'Mystic', 'Neon', 'Shadow', 'Digital', 'Ultra', 'Quantum', 'Stellar', 'Turbo', 'Phantom'];
@@ -26,7 +17,7 @@ const generateUsername = () => {
 };
 
 export default function SignUpPage() {
-  const { signUp, signInAsGuest } = mockAuth;
+  const { signUp, signInAsGuest } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -53,7 +44,8 @@ export default function SignUpPage() {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
 
     // Validation
@@ -89,12 +81,12 @@ export default function SignUpPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <a href="/" className="inline-flex items-center gap-2 text-3xl font-bold hover:scale-105 transition">
+          <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold hover:scale-105 transition">
             <span className="text-5xl">👻</span>
             <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Ghost
             </span>
-          </a>
+          </Link>
           <p className="text-slate-400 mt-2">Create your AI Life Twin</p>
         </div>
 
@@ -108,7 +100,7 @@ export default function SignUpPage() {
             </div>
           )}
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Username
@@ -121,6 +113,7 @@ export default function SignUpPage() {
                   onChange={handleChange}
                   className="w-full px-4 py-3 pr-12 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
                   placeholder="ghostmaster"
+                  required
                 />
                 <button
                   type="button"
@@ -145,6 +138,7 @@ export default function SignUpPage() {
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
                 placeholder="you@example.com"
+                required
               />
             </div>
 
@@ -160,6 +154,7 @@ export default function SignUpPage() {
                   onChange={handleChange}
                   className="w-full px-4 py-3 pr-12 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
                   placeholder="••••••••"
+                  required
                   minLength={8}
                 />
                 <button
@@ -189,6 +184,7 @@ export default function SignUpPage() {
                   onChange={handleChange}
                   className="w-full px-4 py-3 pr-12 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
                   placeholder="••••••••"
+                  required
                 />
                 <button
                   type="button"
@@ -205,27 +201,27 @@ export default function SignUpPage() {
             </div>
 
             <div className="flex items-start text-sm">
-              <input type="checkbox" className="mr-2 mt-1 rounded" />
+              <input type="checkbox" required className="mr-2 mt-1 rounded" />
               <label className="text-slate-400">
                 I agree to the{' '}
-                <a href="/terms" className="text-purple-400 hover:text-purple-300">
+                <Link href="/terms" className="text-purple-400 hover:text-purple-300">
                   Terms of Service
-                </a>{' '}
+                </Link>{' '}
                 and{' '}
-                <a href="/privacy" className="text-purple-400 hover:text-purple-300">
+                <Link href="/privacy" className="text-purple-400 hover:text-purple-300">
                   Privacy Policy
-                </a>
+                </Link>
               </label>
             </div>
 
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={isLoading}
               className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-purple-500/50 transition transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Creating account...' : 'Create Account'}
             </button>
-          </div>
+          </form>
 
           {/* Divider */}
           <div className="relative my-6">
@@ -250,9 +246,9 @@ export default function SignUpPage() {
           {/* Sign In Link */}
           <p className="text-center text-slate-400 mt-6">
             Already have an account?{' '}
-            <a href="/auth/signin" className="text-purple-400 hover:text-purple-300 font-semibold">
+            <Link href="/auth/signin" className="text-purple-400 hover:text-purple-300 font-semibold">
               Sign In
-            </a>
+            </Link>
           </p>
         </div>
 
