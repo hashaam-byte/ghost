@@ -1,7 +1,4 @@
-
-// ===========================================
-// app/api/auth/signup/route.ts - Sign Up Route
-// ===========================================
+// app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
 import bcrypt from 'bcryptjs';
@@ -9,7 +6,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
 
-export async function POST_SIGNUP(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const { email, password, username } = await request.json();
 
@@ -93,7 +90,7 @@ export async function POST_SIGNUP(request: NextRequest) {
           totalXP: 0,
           level: 1,
           xpToNextLevel: 100,
-          coins: 100, // Starting coins
+          coins: 100,
           evolutionStage: 1,
           ghostForm: 'baby',
           avatarStyle: 'basic',

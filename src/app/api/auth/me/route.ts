@@ -1,10 +1,6 @@
-
-// ===========================================
-// app/api/auth/me/route.ts - Get Current User
-// ===========================================
+// app/api/auth/me/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
@@ -22,7 +18,7 @@ function getUserFromToken(request: NextRequest) {
   }
 }
 
-export async function GET_ME(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const decoded = getUserFromToken(request);
     if (!decoded) {
