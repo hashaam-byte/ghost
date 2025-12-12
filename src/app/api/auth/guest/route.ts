@@ -1,15 +1,11 @@
-
-// ===========================================
-// app/api/auth/guest/route.ts - Guest Sign In
-// ===========================================
+// app/api/auth/guest/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
 
-export async function POST_GUEST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     // Generate unique guest identifier
     const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
