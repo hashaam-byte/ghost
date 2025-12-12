@@ -58,8 +58,8 @@ export default function DashboardPage() {
         'chat': '/dashboard/chat',
         'scan': '/dashboard/scan',
         'school': '/dashboard/school',
-        'tasks': '/dashboard/tasks',
-        'insights': '/dashboard/insights',
+        'tasks': '/dashboard/task',
+        'insights': '/dashboard/insight',
         'ghostBusiness': '/dashboard/business',
         'ghostCrypto': '/dashboard/crypto',
         'voice': '/dashboard/chat', // Voice mode is in chat
