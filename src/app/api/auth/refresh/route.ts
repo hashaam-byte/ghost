@@ -1,15 +1,11 @@
-
-// ===========================================
-// app/api/auth/refresh/route.ts - Refresh Token
-// ===========================================
+// app/api/auth/refresh/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
 
-export async function POST_REFRESH(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const decoded = getUserFromToken(request);
     if (!decoded) {
@@ -54,22 +50,22 @@ export async function POST_REFRESH(request: NextRequest) {
     );
   }
 }
+
 function getUserFromToken(request: NextRequest) {
-    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return null;
-    }
+  const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
 
-    const token = authHeader.split(' ')[1];
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId?: string; [key: string]: any };
-        if (!decoded || !decoded.userId) {
-            return null;
-        }
-        return decoded;
-    } catch (err) {
-        console.error('Token verification failed:', err);
-        return null;
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId?: string; [key: string]: any };
+    if (!decoded || !decoded.userId) {
+      return null;
     }
+    return decoded;
+  } catch (err) {
+    console.error('Token verification failed:', err);
+    return null;
+  }
 }
-

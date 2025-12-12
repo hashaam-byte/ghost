@@ -1,15 +1,11 @@
-
-// ===========================================
-// app/api/auth/signout/route.ts - Sign Out
-// ===========================================
+// app/api/auth/signout/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
 
-export async function POST_SIGNOUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const decoded = getUserFromToken(request);
     if (!decoded) {
@@ -37,33 +33,31 @@ export async function POST_SIGNOUT(request: NextRequest) {
     );
   }
 }
+
 function getUserFromToken(request: NextRequest): { userId: string } | null {
-    type JwtPayload = { userId: string; iat?: number; exp?: number };
+  type JwtPayload = { userId: string; iat?: number; exp?: number };
 
-    // Try Authorization header first (Bearer TOKEN)
-    const authHeader = request.headers.get('authorization') || '';
-    let token: string | undefined =
-      authHeader && authHeader.toLowerCase().startsWith('bearer ')
-        ? authHeader.slice(7)
-        : undefined;
+  const authHeader = request.headers.get('authorization') || '';
+  let token: string | undefined =
+    authHeader && authHeader.toLowerCase().startsWith('bearer ')
+      ? authHeader.slice(7)
+      : undefined;
 
-    // Fallback to cookie named 'token'
-    if (!token) {
-      const cookie = request.cookies.get('token');
-      token = cookie?.value;
+  if (!token) {
+    const cookie = request.cookies.get('token');
+    token = cookie?.value;
+  }
+
+  if (!token) return null;
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload | string;
+    if (typeof decoded === 'object' && decoded && 'userId' in decoded) {
+      return { userId: String((decoded as JwtPayload).userId) };
     }
-
-    if (!token) return null;
-
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload | string;
-      if (typeof decoded === 'object' && decoded && 'userId' in decoded) {
-        return { userId: String((decoded as JwtPayload).userId) };
-      }
-      return null;
-    } catch (err) {
-      console.error('Token verification failed:', err);
-      return null;
-    }
+    return null;
+  } catch (err) {
+    console.error('Token verification failed:', err);
+    return null;
+  }
 }
-

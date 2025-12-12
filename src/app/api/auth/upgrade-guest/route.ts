@@ -1,7 +1,4 @@
-
-// ===========================================
-// app/api/auth/upgrade-guest/route.ts - Convert Guest to Real User
-// ===========================================
+// app/api/auth/upgrade-guest/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
 import bcrypt from 'bcryptjs';
@@ -9,7 +6,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
 
-export async function POST_UPGRADE_GUEST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const decoded = getUserFromToken(request);
     if (!decoded) {
@@ -136,22 +133,22 @@ export async function POST_UPGRADE_GUEST(request: NextRequest) {
 }
 
 function getUserFromToken(request: NextRequest): { userId: string; email?: string; plan?: string } | null {
-    try {
-        type TokenPayload = { userId: string; email?: string; plan?: string; iat?: number; exp?: number };
+  try {
+    type TokenPayload = { userId: string; email?: string; plan?: string; iat?: number; exp?: number };
 
-        const authHeader = request.headers.get('authorization') || '';
-        const tokenFromHeader = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-        const tokenFromCookie = request.cookies.get('token')?.value ?? null;
-        const token = tokenFromHeader || tokenFromCookie;
+    const authHeader = request.headers.get('authorization') || '';
+    const tokenFromHeader = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const tokenFromCookie = request.cookies.get('token')?.value ?? null;
+    const token = tokenFromHeader || tokenFromCookie;
 
-        if (!token) return null;
+    if (!token) return null;
 
-        const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
 
-        if (!decoded || typeof decoded !== 'object' || !('userId' in decoded)) return null;
+    if (!decoded || typeof decoded !== 'object' || !('userId' in decoded)) return null;
 
-        return decoded;
-    } catch (error) {
-        return null;
-    }
+    return decoded;
+  } catch (error) {
+    return null;
+  }
 }
