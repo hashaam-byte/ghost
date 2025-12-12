@@ -110,6 +110,7 @@ model GhostProfile {
   
   // Ghost Personality & Mode
   personality     String   @default("chill") // chill, funny, productive, silent, coach
+  tone            String?  @default("friendly") // friendly, neutral, sarcastic, formal, playful
   mode            String   @default("normal") // normal, chaotic, soft, dark, tsundere, y2k, roadman, nigerian, baby
   voicePack       String   @default("default")
   customSlang     String[] // User's custom phrases
