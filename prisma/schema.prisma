@@ -1,4 +1,4 @@
-// GhostX - Complete Production Schema with Offline + Community Features
+// 👻 GhostX Complete Production Schema - All Features
 
 generator client {
   provider = "prisma-client-js"
@@ -31,12 +31,18 @@ model User {
   longitude     Float?
   
   // Profile customization
-  plan          String    @default("free")
+  plan          String    @default("free") // free, pro
   planExpiry    DateTime?
   isStudent     Boolean   @default(false)
   bio           String?
   aestheticScore Int      @default(0)
   profileTheme  String    @default("default")
+  
+  // Device Info
+  deviceId      String?
+  deviceModel   String?
+  deviceOS      String?
+  lastActive    DateTime  @default(now())
   
   // Offline sync tracking
   lastSyncAt    DateTime  @default(now())
@@ -46,31 +52,50 @@ model User {
   updatedAt     DateTime  @updatedAt
   
   // Relations
-  ghostProfile  GhostProfile?
-  tasks         Task[]
-  notes         Note[]
-  streaks       Streak[]
-  xpHistory     XPHistory[]
-  cryptoPortfolio CryptoPortfolio[]
-  gameStats     GameStats[]
-  businessData  BusinessData?
-  moodLogs      MoodLog[]
-  subscription  Subscription?
-  usageStats    UsageStats?
-  chatMessages  ChatMessage[]
-  quests        Quest[]
-  badges        UserBadge[]
-  inventory     InventoryItem[]
-  friends       Friendship[] @relation("UserFriendships")
-  friendOf      Friendship[] @relation("FriendOfUser")
-  roomVisits    RoomVisit[]
-  gifts         Gift[] @relation("GiftSender")
-  receivedGifts Gift[] @relation("GiftReceiver")
-  reactions     Reaction[]
-  voicePacks    UserVoicePack[]
-  nearbyGhosts  NearbyGhost[] @relation("NearbyUser")
-  seenBy        NearbyGhost[] @relation("SeenByUser")
+  ghostProfile      GhostProfile?
+  tasks             Task[]
+  notes             Note[]
+  streaks           Streak[]
+  xpHistory         XPHistory[]
+  cryptoPortfolio   CryptoPortfolio[]
+  gameStats         GameStats[]
+  businessData      BusinessData?
+  moodLogs          MoodLog[]
+  subscription      Subscription?
+  usageStats        UsageStats?
+  chatMessages      ChatMessage[]
+  quests            Quest[]
+  badges            UserBadge[]
+  inventory         InventoryItem[]
+  voiceNotes        VoiceNote[]
+  scans             Scan[]
   
+  // Device Activity
+  deviceActivity    DeviceActivity[]
+  appUsage          AppUsage[]
+  appBlocks         AppBlock[]
+  phoneSessions     PhoneSession[]
+  
+  // Social
+  friendships       Friendship[] @relation("UserFriendships")
+  friendOf          Friendship[] @relation("FriendOfUser")
+  following         Follow[] @relation("UserFollows")
+  followers         Follow[] @relation("UserFollowers")
+  roomVisits        RoomVisit[]
+  gifts             Gift[] @relation("GiftSender")
+  receivedGifts     Gift[] @relation("GiftReceiver")
+  reactions         Reaction[]
+  voicePacks        UserVoicePack[]
+  nearbyGhosts      NearbyGhost[] @relation("NearbyUser")
+  seenBy            NearbyGhost[] @relation("SeenByUser")
+  
+  // Leaderboard
+  leaderboardEntry  Leaderboard?
+  
+  @@index([email])
+  @@index([username])
+  @@index([communityZone])
+  @@index([lastSeen])
   @@map("users")
 }
 
@@ -84,14 +109,14 @@ model GhostProfile {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Ghost Personality & Mode
-  personality     String   @default("chill")
+  personality     String   @default("chill") // chill, funny, productive, silent, coach
   mode            String   @default("normal") // normal, chaotic, soft, dark, tsundere, y2k, roadman, nigerian, baby
   voicePack       String   @default("default")
   customSlang     String[] // User's custom phrases
   
   // Ghost Evolution
   evolutionStage  Int      @default(1) // 1-7 (baby to omega)
-  ghostForm       String   @default("baby")
+  ghostForm       String   @default("baby") // baby, teen, adult, mythic, legendary, omega, animated
   
   // XP & Leveling
   totalXP         Int      @default(0)
@@ -101,43 +126,58 @@ model GhostProfile {
   
   // Ghost Appearance
   avatarStyle     String   @default("basic")
-  accessories     String[]
+  accessories     String[] // ["hoodie", "crown", "chains", "sneakers", "wings"]
   currentOutfit   String?
   skinColor       String   @default("#FFFFFF")
   glowColor       String   @default("#A020F0")
   auraColor       String   @default("pink") // Based on mood/day
+  currentAnimation String  @default("float")
+  personalityEmoji String  @default("👻")
   
   // Ghost Room 3D
   roomTheme       String   @default("default")
-  roomItems       String[]
+  roomItems       String[] // ["led_lights", "poster_anime", "bean_bag", "rgb_desk"]
   roomRating      Int      @default(0)
   isRoomPublic    Boolean  @default(true)
+  roomViews       Int      @default(0)
   
   // Behavioral AI
-  mainFocusAreas  String[]
+  mainFocusAreas  String[] // ["productivity", "health", "social", "gaming"]
   timezone        String   @default("Africa/Lagos")
+  language        String   @default("en") // en, pidgin, hausa, yoruba, igbo
   isMorningPerson Boolean  @default(false)
   procrastinates  Boolean  @default(false)
-  motivationStyle String   @default("positive")
+  motivationStyle String   @default("positive") // positive, tough_love, funny, silent
   
   // Ghost Mood & State
-  currentMood     String   @default("happy")
+  currentMood     String   @default("happy") // happy, sad, angry, proud, sleeping, excited, bored
   lastInteraction DateTime @default(now())
   isSleeping      Boolean  @default(false)
   isFloating      Boolean  @default(true)
+  sleepSchedule   Json?    // {sleepTime: "23:00", wakeTime: "07:00"}
   
   // Ghost Memory & Learning
-  learningData    Json?
+  learningData    Json?    // AI learned patterns
   memorySnapshot  Json?    // Cached for offline
+  userPreferences Json?    // Learned preferences
   
   // Statistics
   totalInteractions Int    @default(0)
+  totalChats        Int    @default(0)
+  totalCommands     Int    @default(0)
   questsCompleted   Int    @default(0)
   streakDays        Int    @default(0)
+  helpfulness       Int    @default(0) // User ratings
+  
+  // Special Powers (Unlocked through leveling)
+  unlockedPowers  String[] // ["screen_overlay", "app_blocker", "voice_commands"]
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
+  @@index([userId])
+  @@index([level])
+  @@index([totalXP])
   @@map("ghost_profiles")
 }
 
@@ -158,14 +198,17 @@ model NearbyGhost {
   
   // Interaction
   canInteract Boolean  @default(true)
+  hasInteracted Boolean @default(false)
   lastSeen    DateTime @default(now())
   
   // Ghost state when seen
   ghostMood   String?
   ghostAnimation String?
+  ghostLevel  Int?
   
   @@unique([userId, nearbyUserId])
   @@index([userId, zone])
+  @@index([zone, lastSeen])
   @@map("nearby_ghosts")
 }
 
@@ -185,12 +228,18 @@ model CommunityZone {
   activeGhosts Int     @default(0)
   totalUsers   Int     @default(0)
   
-  // Hot spots
-  hotspots    Json?    // [{name, lat, long, type}]
+  // Hot spots (events, challenges, treasure spots)
+  hotspots    Json?    // [{name, lat, long, type, reward}]
+  
+  // Zone Events
+  currentEvent String?
+  eventData    Json?
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
+  @@index([name])
+  @@index([country, region])
   @@map("community_zones")
 }
 
@@ -205,7 +254,7 @@ model XPHistory {
   
   amount      Int
   reason      String
-  category    String
+  category    String   // quest, chat, task, social, gaming, study
   questId     String?
   
   // Offline sync
@@ -215,6 +264,7 @@ model XPHistory {
   createdAt   DateTime @default(now())
   
   @@index([userId, createdAt])
+  @@index([userId, category])
   @@index([syncedToServer])
   @@map("xp_history")
 }
@@ -224,7 +274,7 @@ model Streak {
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  type        String
+  type        String   // daily_login, quest, productivity, study, exercise
   count       Int      @default(0)
   bestStreak  Int      @default(0)
   lastUpdated DateTime @default(now())
@@ -232,11 +282,12 @@ model Streak {
   
   @@unique([userId, type])
   @@index([userId])
+  @@index([type])
   @@map("streaks")
 }
 
 // ============================================
-// QUESTS SYSTEM
+// QUESTS SYSTEM - REALTIME & OFFLINE
 // ============================================
 
 model Quest {
@@ -246,35 +297,45 @@ model Quest {
   
   title       String
   description String
-  type        String   // daily, weekly, challenge, seasonal, realtime
-  category    String
+  type        String   // daily, weekly, challenge, seasonal, realtime, social
+  category    String   // productivity, health, social, app_usage, study, gaming
   
   // Requirements
-  target      Int
+  target      Int      // Target number (e.g., 180 for 3 hours)
   progress    Int      @default(0)
+  unit        String   @default("count") // count, minutes, hours, days
   
   // Rewards
   xpReward    Int
   coinReward  Int      @default(0)
-  itemReward  String?
+  itemReward  String?  // Item ID from shop
+  badgeReward String?  // Special badge
   
-  status      String   @default("active")
+  status      String   @default("active") // active, completed, failed, expired
   expiresAt   DateTime?
   completedAt DateTime?
   
-  difficulty  String   @default("easy")
-  season      String?
+  // Quest metadata
+  difficulty  String   @default("easy") // easy, medium, hard, legendary
+  season      String?  // "halloween", "christmas", "anime_week"
   isRepeatable Boolean @default(false)
+  cooldown    Int?     // Hours before can repeat
+  
+  // Realtime tracking (for app usage quests)
+  trackingData Json?   // {appName, startTime, etc}
   
   // Offline support
   canCompleteOffline Boolean @default(true)
   syncedToServer     Boolean @default(false)
+  localId            String?
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   @@index([userId, status])
   @@index([userId, type])
+  @@index([status, expiresAt])
+  @@index([syncedToServer])
   @@map("quests")
 }
 
@@ -286,17 +347,24 @@ model Badge {
   id          String   @id @default(cuid())
   name        String   @unique
   description String
-  icon        String
-  rarity      String
-  category    String
+  icon        String   // emoji or icon name
+  rarity      String   // common, rare, epic, legendary, mythic
+  category    String   // xp, streak, social, quest, special, seasonal
   
-  requirement String
+  // Unlock requirements
+  requirement String   // "reach_level_10", "complete_100_quests", "30_day_streak"
   requirementValue Int?
+  
+  // Visual
+  glowColor   String?  // Hex color for glow effect
+  animation   String?  // "pulse", "rotate", "shimmer"
   
   users       UserBadge[]
   
   createdAt   DateTime @default(now())
   
+  @@index([category])
+  @@index([rarity])
   @@map("badges")
 }
 
@@ -308,10 +376,12 @@ model UserBadge {
   badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
   
   isDisplayed Boolean @default(false)
+  isPinned    Boolean @default(false)
   earnedAt    DateTime @default(now())
   
   @@unique([userId, badgeId])
   @@index([userId])
+  @@index([userId, isPinned])
   @@map("user_badges")
 }
 
@@ -323,634 +393,8 @@ model ShopItem {
   id          String   @id @default(cuid())
   name        String
   description String
-  type        String
-  category    String
-  
-  coinPrice   Int?
-  xpPrice     Int?
-  isPremium   Boolean  @default(false)
-  
-  itemData    Json
-  rarity      String   @default("common")
-  season      String?
-  
-  isLimited   Boolean  @default(false)
-  stock       Int?
-  expiresAt   DateTime?
-  
-  inventory   InventoryItem[]
-  
-  createdAt   DateTime @default(now())
-  
-  @@map("shop_items")
-}
-
-model InventoryItem {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  itemId      String
-  item        ShopItem @relation(fields: [itemId], references: [id])
-  
-  isEquipped  Boolean  @default(false)
-  acquiredAt  DateTime @default(now())
-  
-  @@unique([userId, itemId])
-  @@index([userId])
-  @@map("inventory_items")
-}
-
-// ============================================
-// VOICE PACKS
-// ============================================
-
-model VoicePack {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String
-  gender      String
-  style       String
-  
-  isPremium   Boolean  @default(false)
-  coinPrice   Int?
-  
-  // Voice samples (cached for offline)
-  sampleData  Json?
-  
-  users       UserVoicePack[]
-  
-  createdAt   DateTime @default(now())
-  
-  @@map("voice_packs")
-}
-
-model UserVoicePack {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  voicePackId String
-  voicePack   VoicePack @relation(fields: [voicePackId], references: [id])
-  
-  isActive    Boolean   @default(false)
-  purchasedAt DateTime  @default(now())
-  
-  @@unique([userId, voicePackId])
-  @@index([userId])
-  @@map("user_voice_packs")
-}
-
-// ... (Continue with remaining models from previous schema)
-
-// Keep existing models: ChatMessage, Task, Note, CryptoPortfolio, GameStats, etc.
-
-model ChatMessage {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  role        String
-  content     String   @db.Text
-  xpAwarded   Int?
-  category    String?
-  
-  // Offline support
-  localId     String?
-  syncedToServer Boolean @default(false)
-  
-  createdAt   DateTime @default(now())
-  
-  @@index([userId, createdAt])
-  @@map("chat_messages")
-}
-
-model Task {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  title       String
-  description String?   @db.Text
-  category    String
-  priority    String    @default("medium")
-  status      String    @default("pending")
-  
-  dueDate     DateTime?
-  completedAt DateTime?
-  
-  xpReward    Int       @default(10)
-  xpAwarded   Boolean   @default(false)
-  
-  scheduledAt DateTime?
-  duration    Int?
-  
-  // Offline support
-  localId     String?
-  syncedToServer Boolean @default(false)
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  @@index([userId, status])
-  @@map("tasks")
-}
-
-// ... (Add remaining models: Note, CryptoPortfolio, GameStats, BusinessData, MoodLog, Subscription, UsageStats, Payment, SyncLog)
-
-// Friendship, RoomVisit, Gift, Reaction models from enhanced schema
-model Friendship {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation("UserFriendships", fields: [userId], references: [id], onDelete: Cascade)
-  friendId    String
-  friend      User     @relation("FriendOfUser", fields: [friendId], references: [id], onDelete: Cascade)
-  
-  status      String   @default("pending")
-  createdAt   DateTime @default(now())
-  
-  @@unique([userId, friendId])
-  @@index([userId])
-  @@index([friendId])
-  @@map("friendships")
-}
-
-model RoomVisit {
-  id          String   @id @default(cuid())
-  visitorId   String
-  visitor     User     @relation(fields: [visitorId], references: [id], onDelete: Cascade)
-  roomOwnerId String
-  
-  rating      Int?
-  comment     String?
-  
-  visitedAt   DateTime @default(now())
-  
-  @@index([roomOwnerId])
-  @@index([visitorId])
-  @@map("room_visits")
-}
-
-model Gift {
-  id          String   @id @default(cuid())
-  senderId    String
-  sender      User     @relation("GiftSender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiverId  String
-  receiver    User     @relation("GiftReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  
-  giftType    String
-  giftData    Json
-  message     String?
-  
-  isOpened    Boolean  @default(false)
-  openedAt    DateTime?
-  sentAt      DateTime @default(now())
-  
-  @@index([receiverId])
-  @@map("gifts")
-}
-
-model Reaction {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  targetType  String
-  targetId    String
-  
-  reactionType String
-  
-  createdAt   DateTime @default(now())
-  
-  @@unique([userId, targetType, targetId, reactionType])
-  @@index([targetType, targetId])
-  @@map("reactions")
-}
-
-// Remaining existing models...
-model Note {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  title       String
-  content     String   @db.Text
-  subject     String?
-  summary     String?  @db.Text
-  keyPoints   String[]
-  flashcards  Json?
-  imageUrl    String?
-  tags        String[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@index([userId, createdAt])
-  @@map("notes")
-}
-
-model CryptoPortfolio {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  coinSymbol  String
-  coinName    String
-  amount      Float
-  buyPrice    Float
-  currentPrice Float?
-  walletAddress String?
-  profitLoss  Float?
-  profitLossPercent Float?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@index([userId])
-  @@map("crypto_portfolio")
-}
-
-model GameStats {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  gameName    String
-  accuracy    Float?
-  kdRatio     Float?
-  winRate     Float?
-  rank        String?
-  sensitivity Json?
-  lastPlayed  DateTime?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@unique([userId, gameName])
-  @@map("game_stats")
-}
-
-model BusinessData {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  businessName String?
-  businessType String?
-  revenue     Float    @default(0)
-  expenses    Float    @default(0)
-  profit      Float    @default(0)
-  ideas       Json?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@map("business_data")
-}
-
-model MoodLog {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  mood        String
-  energy      Int
-  stress      Int
-  sleepHours  Float?
-  notes       String?  @db.Text
-  
-  createdAt   DateTime @default(now())
-  
-  @@index([userId, createdAt])
-  @@map("mood_logs")
-}
-
-model Subscription {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  plan        String
-  status      String   @default("active")
-  amount      Float?
-  currency    String   @default("NGN")
-  interval    String?
-  
-  startDate   DateTime @default(now())
-  endDate     DateTime?
-  
-  paymentMethod String?
-  lastPaymentDate DateTime?
-  nextBillingDate DateTime?
-  
-  isStudent   Boolean  @default(false)
-  studentVerified Boolean @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@map("subscriptions")
-}
-
-model UsageStats {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  chatCount   Int      @default(0)
-  scanCount   Int      @default(0)
-  schoolScanCount Int  @default(0)
-  
-  chatLimit   Int      @default(50)
-  scanLimit   Int      @default(10)
-  schoolScanLimit Int  @default(5)
-  
-  lastResetDate DateTime @default(now())
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@map("usage_stats")
-}
-
-model Payment {
-  id          String   @id @default(cuid())
-  userId      String
-  
-  amount      Float
-  currency    String   @default("NGN")
-  plan        String
-  interval    String
-  status      String
-  reference   String   @unique
-  gateway     String
-  metadata    Json?
-  
-  createdAt   DateTime @default(now())
-  
-  @@index([userId])
-  @@index([reference])
-  @@index([status])
-  @@map("payments")
-}
-
-model SyncLog {
-  id          String   @id @default(cuid())
-  userId      String
-  
-  entityType  String
-  entityId    String
-  operation   String
-  data        Json?
-  synced      Boolean  @default(false)
-  
-  createdAt   DateTime @default(now())
-  syncedAt    DateTime?
-  
-  @@index([userId, synced])
-  @@index([userId, createdAt])
-  @@map("sync_logs")
-}
-
-// ============================================
-// USER & AUTHENTICATION
-// ============================================
-
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  username      String?   @unique
-  name          String?
-  avatar        String?
-  password      String?
-  
-  isGuest       Boolean   @default(false)
-  
-  // Subscription
-  plan          String    @default("free")
-  planExpiry    DateTime?
-  isStudent     Boolean   @default(false)
-  
-  // Profile customization
-  bio           String?
-  aestheticScore Int      @default(0)
-  profileTheme  String    @default("default")
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  // Relations
-  ghostProfile  GhostProfile?
-  tasks         Task[]
-  notes         Note[]
-  streaks       Streak[]
-  xpHistory     XPHistory[]
-  cryptoPortfolio CryptoPortfolio[]
-  gameStats     GameStats[]
-  businessData  BusinessData?
-  moodLogs      MoodLog[]
-  subscription  Subscription?
-  usageStats    UsageStats?
-  chatMessages  ChatMessage[]
-  quests        Quest[]
-  badges        UserBadge[]
-  inventory     InventoryItem[]
-  friends       Friendship[] @relation("UserFriendships")
-  friendOf      Friendship[] @relation("FriendOfUser")
-  roomVisits    RoomVisit[]
-  gifts         Gift[] @relation("GiftSender")
-  receivedGifts Gift[] @relation("GiftReceiver")
-  reactions     Reaction[]
-  voicePacks    UserVoicePack[]
-  
-  @@map("users")
-}
-
-// ============================================
-// GHOST AI CORE - ENHANCED
-// ============================================
-
-model GhostProfile {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Ghost Personality & Mode
-  personality     String   @default("chill")
-  mode            String   @default("normal") // normal, chaotic, soft, dark, tsundere, y2k, roadman, nigerian, baby
-  voicePack       String   @default("default")
-  
-  // Ghost Evolution
-  evolutionStage  Int      @default(1) // 1-7 (baby to omega)
-  ghostForm       String   @default("baby") // baby, teen, adult, mythic, legendary, omega, animated
-  
-  // XP & Leveling
-  totalXP         Int      @default(0)
-  level           Int      @default(1)
-  xpToNextLevel   Int      @default(100)
-  coins           Int      @default(0)
-  
-  // Ghost Appearance
-  avatarStyle     String   @default("basic")
-  accessories     String[] // ["hoodie", "crown", "chains", "sneakers"]
-  currentOutfit   String?
-  skinColor       String   @default("#FFFFFF")
-  glowColor       String   @default("#A020F0")
-  
-  // Ghost Room 3D
-  roomTheme       String   @default("default")
-  roomItems       String[] // ["led_lights", "poster_1", "bean_bag"]
-  roomRating      Int      @default(0)
-  isRoomPublic    Boolean  @default(true)
-  
-  // Behavioral AI
-  mainFocusAreas  String[]
-  timezone        String   @default("Africa/Lagos")
-  isMorningPerson Boolean  @default(false)
-  procrastinates  Boolean  @default(false)
-  motivationStyle String   @default("positive")
-  
-  // Ghost Mood & State
-  currentMood     String   @default("happy") // happy, sad, angry, proud, sleeping
-  lastInteraction DateTime @default(now())
-  isSleeping      Boolean  @default(false)
-  
-  // Ghost Memory
-  learningData    Json?    // AI learned patterns
-  customSlang     String[] // ["wagwan", "say less", "bet"]
-  
-  // Statistics
-  totalInteractions Int    @default(0)
-  questsCompleted   Int    @default(0)
-  streakDays        Int    @default(0)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  @@map("ghost_profiles")
-}
-
-// ============================================
-// GHOST XP & GAMIFICATION
-// ============================================
-
-model XPHistory {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  amount      Int
-  reason      String
-  category    String
-  questId     String?
-  
-  createdAt   DateTime @default(now())
-  
-  @@index([userId, createdAt])
-  @@map("xp_history")
-}
-
-model Streak {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  type        String
-  count       Int      @default(0)
-  bestStreak  Int      @default(0)
-  lastUpdated DateTime @default(now())
-  isActive    Boolean  @default(true)
-  
-  @@unique([userId, type])
-  @@index([userId])
-  @@map("streaks")
-}
-
-// ============================================
-// QUESTS SYSTEM
-// ============================================
-
-model Quest {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  title       String
-  description String
-  type        String   // daily, weekly, challenge, seasonal
-  category    String   // productivity, health, social, app_usage
-  
-  // Requirements
-  target      Int      // e.g., "Don't open TikTok for 3 hours" = 180 minutes
-  progress    Int      @default(0)
-  
-  // Rewards
-  xpReward    Int
-  coinReward  Int      @default(0)
-  itemReward  String?  // "legendary_crown"
-  
-  status      String   @default("active") // active, completed, failed, expired
-  expiresAt   DateTime?
-  completedAt DateTime?
-  
-  // Quest metadata
-  difficulty  String   @default("easy") // easy, medium, hard, legendary
-  season      String?  // "halloween", "christmas", "anime"
-  isRepeatable Boolean @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@index([userId, status])
-  @@index([userId, type])
-  @@map("quests")
-}
-
-// ============================================
-// BADGES & ACHIEVEMENTS
-// ============================================
-
-model Badge {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String
-  icon        String
-  rarity      String   // common, rare, epic, legendary, mythic
-  category    String   // xp, streak, social, quest, special
-  
-  // Unlock requirements
-  requirement String   // "reach_level_10", "complete_100_quests"
-  requirementValue Int?
-  
-  users       UserBadge[]
-  
-  createdAt   DateTime @default(now())
-  
-  @@map("badges")
-}
-
-model UserBadge {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  badgeId   String
-  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
-  
-  isDisplayed Boolean @default(false)
-  earnedAt    DateTime @default(now())
-  
-  @@unique([userId, badgeId])
-  @@index([userId])
-  @@map("user_badges")
-}
-
-// ============================================
-// INVENTORY & SHOP
-// ============================================
-
-model ShopItem {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  type        String   // accessory, room_item, voice_pack, ghost_skin, animation
-  category    String   // ghost, room, special
+  type        String   // accessory, room_item, voice_pack, ghost_skin, animation, power
+  category    String   // ghost, room, special, seasonal
   
   // Pricing
   coinPrice   Int?
@@ -958,19 +402,26 @@ model ShopItem {
   isPremium   Boolean  @default(false) // Requires Ghost+ subscription
   
   // Item data
-  itemData    Json     // {"color": "#FF00FF", "animation": "float"}
-  rarity      String   @default("common")
-  season      String?
+  itemData    Json     // {model, texture, animation, etc}
+  preview     String?  // Preview image URL
+  rarity      String   @default("common") // common, rare, epic, legendary, mythic
+  season      String?  // halloween, christmas, etc
   
   // Availability
   isLimited   Boolean  @default(false)
-  stock       Int?
+  stock       Int?     // null = unlimited
   expiresAt   DateTime?
+  unlockLevel Int?     // Required level to purchase
   
   inventory   InventoryItem[]
   
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   
+  @@index([type])
+  @@index([category])
+  @@index([isPremium])
+  @@index([season])
   @@map("shop_items")
 }
 
@@ -982,31 +433,43 @@ model InventoryItem {
   item        ShopItem @relation(fields: [itemId], references: [id])
   
   isEquipped  Boolean  @default(false)
+  isFavorite  Boolean  @default(false)
   acquiredAt  DateTime @default(now())
+  acquiredFrom String? // "purchase", "quest", "gift", "season"
   
   @@unique([userId, itemId])
   @@index([userId])
+  @@index([userId, isEquipped])
   @@map("inventory_items")
 }
 
 // ============================================
-// VOICE PACKS
+// VOICE PACKS & CUSTOMIZATION
 // ============================================
 
 model VoicePack {
   id          String   @id @default(cuid())
   name        String   @unique
   description String
-  gender      String   // male, female, neutral, anime
-  style       String   // cute, chaotic, deep, whisper, robot
+  gender      String   // male, female, neutral, anime, robot
+  style       String   // cute, chaotic, deep, whisper, energetic, calm
   
   isPremium   Boolean  @default(false)
   coinPrice   Int?
+  
+  // Voice samples (cached for offline)
+  sampleData  Json?    // {greeting, motivation, roast, etc}
+  previewUrl  String?  // Audio preview URL
+  
+  // Availability
+  unlockLevel Int?
+  season      String?
   
   users       UserVoicePack[]
   
   createdAt   DateTime @default(now())
   
+  @@index([isPremium])
   @@map("voice_packs")
 }
 
@@ -1022,6 +485,7 @@ model UserVoicePack {
   
   @@unique([userId, voicePackId])
   @@index([userId])
+  @@index([userId, isActive])
   @@map("user_voice_packs")
 }
 
@@ -1037,12 +501,35 @@ model Friendship {
   friend      User     @relation("FriendOfUser", fields: [friendId], references: [id], onDelete: Cascade)
   
   status      String   @default("pending") // pending, accepted, blocked
+  
+  // Friendship stats
+  sharedXP    Int      @default(0) // XP earned together
+  interactions Int     @default(0)
+  
   createdAt   DateTime @default(now())
+  acceptedAt  DateTime?
   
   @@unique([userId, friendId])
   @@index([userId])
   @@index([friendId])
+  @@index([status])
   @@map("friendships")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  
+  follower    User     @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
 }
 
 model RoomVisit {
@@ -1053,11 +540,13 @@ model RoomVisit {
   
   rating      Int?     // 1-5 stars
   comment     String?
+  reactions   String[] // ["fire", "wow", "cool"]
   
   visitedAt   DateTime @default(now())
   
   @@index([roomOwnerId])
   @@index([visitorId])
+  @@index([roomOwnerId, visitedAt])
   @@map("room_visits")
 }
 
@@ -1068,8 +557,8 @@ model Gift {
   receiverId  String
   receiver    User     @relation("GiftReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   
-  giftType    String   // coins, item, accessory, special
-  giftData    Json
+  giftType    String   // coins, item, accessory, xp_boost, special
+  giftData    Json     // {itemId, amount, etc}
   message     String?
   
   isOpened    Boolean  @default(false)
@@ -1077,6 +566,7 @@ model Gift {
   sentAt      DateTime @default(now())
   
   @@index([receiverId])
+  @@index([receiverId, isOpened])
   @@map("gifts")
 }
 
@@ -1084,10 +574,10 @@ model Reaction {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  targetType  String   // room, profile, quest_completion
+  targetType  String   // room, profile, quest_completion, achievement
   targetId    String
   
-  reactionType String  // fire, heart, wow, laugh, clap
+  reactionType String  // fire, heart, wow, laugh, clap, ghost
   
   createdAt   DateTime @default(now())
   
@@ -1102,9 +592,10 @@ model Reaction {
 
 model Leaderboard {
   id          String   @id @default(cuid())
-  userId      String
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // Rankings
+  // Global Rankings
   xpRank      Int?
   levelRank   Int?
   aestheticRank Int?
@@ -1118,16 +609,24 @@ model Leaderboard {
   streakDays  Int      @default(0)
   questsCompleted Int  @default(0)
   
+  // Regional Rankings
+  regionalRank Int?
+  communityZone String?
+  
   // Seasonal
   season      String?
   seasonRank  Int?
   seasonPoints Int     @default(0)
   
+  // Trends
+  rankChange  Int      @default(0) // +5, -3, etc
+  isRising    Boolean  @default(false)
+  
   updatedAt   DateTime @updatedAt
   
-  @@unique([userId])
   @@index([xpRank])
   @@index([season])
+  @@index([communityZone])
   @@map("leaderboard")
 }
 
@@ -1135,13 +634,54 @@ model Leaderboard {
 // APP USAGE TRACKING (Ghost Guardian)
 // ============================================
 
-model AppUsage {
-  id          String   @id @default(cuid())
-  userId      String
+model DeviceActivity {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  appName     String
-  packageName String
-  icon        String?
+  date          DateTime @default(now())
+  
+  // Screen Time
+  totalScreenTime Int    @default(0) // seconds
+  productiveTime  Int    @default(0) // seconds
+  distractionTime Int    @default(0) // seconds
+  
+  // Device Stats
+  unlockCount   Int      @default(0)
+  notificationCount Int  @default(0)
+  
+  // Battery
+  batteryStart  Int?
+  batteryEnd    Int?
+  batteryDrain  Int?
+  
+  // Sleep Tracking
+  sleepTime     DateTime?
+  wakeTime      DateTime?
+  sleepQuality  Int?     // 1-10
+  
+  // Mood & Productivity
+  detectedMood  String?  // happy, stressed, tired, focused
+  productivity  Int?     // 1-10 score
+  stressLevel   Int?     // 1-10
+  
+  // Warnings Given
+  warningsGiven Int      @default(0)
+  
+  @@index([userId, date])
+  @@unique([userId, date])
+  @@map("device_activity")
+}
+
+model AppUsage {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  date          DateTime @default(now())
+  appName       String
+  packageName   String
+  icon          String?
   
   // Usage stats
   timeSpent   Int      @default(0) // seconds
@@ -1149,97 +689,156 @@ model AppUsage {
   lastOpened  DateTime?
   
   // Categories
-  category    String?  // social, productivity, entertainment, gaming
+  category    String?  // social, productivity, entertainment, gaming, education
   isDistraction Boolean @default(false)
-  
-  // Date tracking
-  date        DateTime @default(now())
+  isProductive Boolean @default(false)
   
   @@unique([userId, packageName, date])
   @@index([userId, date])
+  @@index([userId, category])
   @@map("app_usage")
 }
 
 model AppBlock {
   id          String   @id @default(cuid())
   userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   packageName String
   appName     String
   
   isBlocked   Boolean  @default(true)
   blockUntil  DateTime?
-  blockReason String?
+  blockReason String?  // quest, focus_mode, ghost_recommendation
+  
+  // Block Settings
+  allowEmergency Boolean @default(true)
+  maxUnlocks     Int?   // Allow X unlocks per day
+  unlocksUsed    Int    @default(0)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   @@unique([userId, packageName])
   @@index([userId])
+  @@index([userId, isBlocked])
   @@map("app_blocks")
 }
 
 model PhoneSession {
   id          String   @id @default(cuid())
   userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   startTime   DateTime
   endTime     DateTime?
   duration    Int?     // seconds
   
   // Session stats
-  screenshotCount Int  @default(0)
   unlockCount     Int  @default(0)
   notificationCount Int @default(0)
+  appsUsed        String[] // List of apps opened
   
-  // Mood detection
+  // AI Analysis
+  sessionType     String?  // productive, distracted, balanced, focused
   detectedMood    String?
   stressLevel     Int?   // 1-10
+  
+  // Ghost Interactions
+  ghostWarnings   Int    @default(0)
+  ghostHelped     Boolean @default(false)
   
   date        DateTime @default(now())
   
   @@index([userId, date])
+  @@index([userId, startTime])
   @@map("phone_sessions")
 }
 
 // ============================================
-// SEASONAL EVENTS
+// SEASONAL EVENTS & SPECIAL FEATURES
 // ============================================
 
 model SeasonalEvent {
   id          String   @id @default(cuid())
   name        String
   description String
-  season      String   @unique // "halloween_2024", "christmas_2024"
+  season      String   @unique // "halloween_2024", "christmas_2024", "anime_season"
   
   startDate   DateTime
   endDate     DateTime
   
-  // Event rewards
-  exclusiveItems String[] // Item IDs
-  specialQuests  String[] // Quest types
+  // Event rewards & content
+  exclusiveItems String[] // Shop item IDs
+  specialQuests  String[] // Quest types available
+  eventBadges    String[] // Badge IDs
+  
+  // Event Map Data
+  eventZones     Json?    // Special zones that appear during event
+  
+  // Leaderboard
+  hasLeaderboard Boolean @default(false)
+  leaderboardPrizes Json?
   
   isActive    Boolean  @default(false)
   
   createdAt   DateTime @default(now())
   
+  @@index([isActive])
+  @@index([startDate, endDate])
   @@map("seasonal_events")
 }
 
-// Keep existing models...
+// ============================================
+// VOICE & COMMUNICATION
+// ============================================
+
+model VoiceNote {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  audioUrl    String
+  duration    Int      // seconds
+  
+  voiceType   String   // original, aesthetic_girl, deep, anime, whisper, robot
+  transcription String? @db.Text
+  
+  isPublic    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("voice_notes")
+}
+
+// ============================================
+// CHAT, TASKS, NOTES & SCANS
+// ============================================
+
 model ChatMessage {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  role        String
+  role        String   // user, assistant, system
   content     String   @db.Text
   xpAwarded   Int?
   category    String?
   
+  // Message metadata
+  mood        String?  // Ghost's detected mood from message
+  intent      String?  // help, chat, command, question
+  
+  // Offline support
+  localId     String?
+  syncedToServer Boolean @default(false)
+  
   createdAt   DateTime @default(now())
   
   @@index([userId, createdAt])
+  @@index([syncedToServer])
   @@map("chat_messages")
 }
 
@@ -1250,9 +849,9 @@ model Task {
   
   title       String
   description String?   @db.Text
-  category    String
-  priority    String    @default("medium")
-  status      String    @default("pending")
+  category    String    // productivity, personal, work, study, health
+  priority    String    @default("medium") // low, medium, high, urgent
+  status      String    @default("pending") // pending, in_progress, completed, cancelled
   
   dueDate     DateTime?
   completedAt DateTime?
@@ -1261,12 +860,26 @@ model Task {
   xpAwarded   Boolean   @default(false)
   
   scheduledAt DateTime?
-  duration    Int?
+  duration    Int?      // estimated minutes
+  
+  // Reminders
+  reminderTime DateTime?
+  reminderSent Boolean  @default(false)
+  
+  // Subtasks
+  subtasks    Json?     // [{title, completed}]
+  
+  // Offline support
+  localId     String?
+  syncedToServer Boolean @default(false)
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
   @@index([userId, status])
+  @@index([userId, dueDate])
+  @@index([userId, createdAt])
+  @@index([syncedToServer])
   @@map("tasks")
 }
 
@@ -1278,18 +891,68 @@ model Note {
   title       String
   content     String   @db.Text
   subject     String?
+  
+  // AI-generated helpers
   summary     String?  @db.Text
   keyPoints   String[]
-  flashcards  Json?
+  flashcards  Json?    // [{question, answer}]
+  
   imageUrl    String?
   tags        String[]
+  
+  // Study features
+  difficulty  String?  // easy, medium, hard
+  studyCount  Int      @default(0)
+  lastStudied DateTime?
+  
+  // Offline support
+  localId     String?
+  syncedToServer Boolean @default(false)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   @@index([userId, createdAt])
+  @@index([userId, subject])
+  @@index([syncedToServer])
   @@map("notes")
 }
+
+model Scan {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  scanType      String   // text, message, email, document, image
+  description   String   @db.Text
+  context       String?  @db.Text
+  
+  // AI Analysis
+  analysis      String   @db.Text
+  redFlags      String[] // Warning signs detected
+  tone          String?  // friendly, aggressive, suspicious, professional
+  sentiment     String?  // positive, negative, neutral
+  recommendation String? @db.Text
+  threatLevel   String?  // safe, caution, warning, danger
+  confidence    Float?   // 0-1
+  
+  xpAwarded     Int      @default(5)
+  
+  // Offline support
+  localId       String?
+  syncedToServer Boolean @default(false)
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([userId, scanType])
+  @@index([syncedToServer])
+  @@map("scans")
+}
+
+// ============================================
+// CRYPTO, GAMING & BUSINESS
+// ============================================
 
 model CryptoPortfolio {
   id          String   @id @default(cuid())
@@ -1301,14 +964,22 @@ model CryptoPortfolio {
   amount      Float
   buyPrice    Float
   currentPrice Float?
+  
   walletAddress String?
+  
   profitLoss  Float?
   profitLossPercent Float?
+  
+  // Offline support
+  localId     String?
+  syncedToServer Boolean @default(false)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   @@index([userId])
+  @@index([userId, coinSymbol])
+  @@index([syncedToServer])
   @@map("crypto_portfolio")
 }
 
@@ -1318,17 +989,24 @@ model GameStats {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   gameName    String
+  
   accuracy    Float?
   kdRatio     Float?
   winRate     Float?
   rank        String?
+  
   sensitivity Json?
+  
   lastPlayed  DateTime?
+  
+  // Ghost recommendations
+  recommendations Json? // AI-generated tips
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   @@unique([userId, gameName])
+  @@index([userId])
   @@map("game_stats")
 }
 
@@ -1339,10 +1017,13 @@ model BusinessData {
   
   businessName String?
   businessType String?
+  
   revenue     Float    @default(0)
   expenses    Float    @default(0)
   profit      Float    @default(0)
-  ideas       Json?
+  
+  ideas       Json?    // Business ideas and AI suggestions
+  goals       Json?    // Business goals tracking
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1350,47 +1031,77 @@ model BusinessData {
   @@map("business_data")
 }
 
+// ============================================
+// MOOD & MENTAL HEALTH
+// ============================================
+
 model MoodLog {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  mood        String
-  energy      Int
-  stress      Int
+  mood        String   // happy, sad, anxious, stressed, excited, calm, tired
+  energy      Int      // 1-10
+  stress      Int      // 1-10
+  
   sleepHours  Float?
+  
   notes       String?  @db.Text
+  
+  // AI Analysis
+  aiInsights  String?  @db.Text
+  suggestions String[] // Ghost's suggestions
+  
+  // Activities that influenced mood
+  activities  String[] // exercise, social, work, gaming, etc
+  
+  // Offline support
+  localId     String?
+  syncedToServer Boolean @default(false)
   
   createdAt   DateTime @default(now())
   
   @@index([userId, createdAt])
+  @@index([syncedToServer])
   @@map("mood_logs")
 }
+
+// ============================================
+// SUBSCRIPTION & BILLING
+// ============================================
 
 model Subscription {
   id          String   @id @default(cuid())
   userId      String   @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  plan        String
-  status      String   @default("active")
+  plan        String   // free, ghost_plus, ghost_pro
+  status      String   @default("active") // active, cancelled, expired, past_due
+  
   amount      Float?
   currency    String   @default("NGN")
-  interval    String?
+  interval    String?  // monthly, yearly
   
   startDate   DateTime @default(now())
   endDate     DateTime?
   
-  paymentMethod String?
+  paymentMethod String? // card, paystack, flutterwave, crypto
   lastPaymentDate DateTime?
   nextBillingDate DateTime?
   
+  // Student discount
   isStudent   Boolean  @default(false)
   studentVerified Boolean @default(false)
+  studentIdUrl String?
+  
+  // Features unlocked
+  features    Json?    // {maxChats, unlimitedScans, prioritySupport, etc}
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
+  @@index([status])
+  @@index([nextBillingDate])
   @@map("subscriptions")
 }
 
@@ -1399,13 +1110,23 @@ model UsageStats {
   userId      String   @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  // Chat limits
   chatCount   Int      @default(0)
-  scanCount   Int      @default(0)
-  schoolScanCount Int  @default(0)
-  
   chatLimit   Int      @default(50)
+  
+  // Scan limits
+  scanCount   Int      @default(0)
   scanLimit   Int      @default(10)
+  schoolScanCount Int  @default(0)
   schoolScanLimit Int  @default(5)
+  
+  // Voice note limits
+  voiceNoteCount Int   @default(0)
+  voiceNoteLimit Int   @default(20)
+  
+  // API calls (for advanced features)
+  apiCallCount Int    @default(0)
+  apiCallLimit Int    @default(1000)
   
   lastResetDate DateTime @default(now())
   
@@ -1413,4 +1134,247 @@ model UsageStats {
   updatedAt   DateTime @updatedAt
   
   @@map("usage_stats")
+}
+
+// ============================================
+// NOTIFICATIONS & REMINDERS
+// ============================================
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  type        String   // quest_complete, level_up, friend_request, gift, reminder, achievement
+  title       String
+  message     String   @db.Text
+  
+  // Notification data
+  data        Json?    // {questId, friendId, giftId, etc}
+  
+  // Actions
+  actionLabel String?  // "View Quest", "Accept", "Open Gift"
+  actionUrl   String?
+  
+  isRead      Boolean  @default(false)
+  isPushed    Boolean  @default(false) // Was push notification sent
+  
+  expiresAt   DateTime?
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  title       String
+  message     String?
+  
+  reminderTime DateTime
+  
+  // Repeat settings
+  isRecurring Boolean  @default(false)
+  recurringPattern String? // daily, weekly, weekdays, custom
+  customDays  Int[]    // [1,2,3,4,5] for weekdays
+  
+  // State
+  isActive    Boolean  @default(true)
+  isSent      Boolean  @default(false)
+  lastSentAt  DateTime?
+  
+  // Related entity
+  relatedType String?  // task, quest, study_session
+  relatedId   String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId, reminderTime])
+  @@index([isActive, isSent])
+  @@map("reminders")
+}
+
+// ============================================
+// ANALYTICS & INSIGHTS
+// ============================================
+
+model DailyInsight {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  date        DateTime @default(now())
+  
+  // Productivity metrics
+  productivityScore Int // 1-100
+  focusTime    Int    // minutes
+  distractionTime Int // minutes
+  
+  // Goals
+  goalsCompleted Int  @default(0)
+  goalsTotal     Int  @default(0)
+  
+  // Habits
+  habitsCompleted String[] // List of completed habits
+  streakMaintained Boolean @default(false)
+  
+  // AI Analysis
+  summary      String  @db.Text
+  highlights   String[] // ["Completed 5 tasks", "Maintained 7-day streak"]
+  improvements String[] // ["Reduce social media time", "Sleep earlier"]
+  
+  // Recommendations for tomorrow
+  tomorrowPlan Json?   // AI-generated plan
+  
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("daily_insights")
+}
+
+model WeeklyReport {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  weekStart   DateTime
+  weekEnd     DateTime
+  
+  // Summary stats
+  totalXP     Int
+  totalTasks  Int
+  totalFocus  Int      // minutes
+  avgProductivity Float
+  
+  // Goals & Quests
+  questsCompleted Int
+  goalsAchieved   Int
+  
+  // Insights
+  topAchievements String[] // Highlights of the week
+  areasToImprove  String[] // What to work on
+  weekRating      Int?     // User's self-rating 1-10
+  
+  // Ghost message
+  ghostMessage String?  @db.Text
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId, weekStart])
+  @@map("weekly_reports")
+}
+
+// ============================================
+// FEEDBACK & SUPPORT
+// ============================================
+
+model Feedback {
+  id          String   @id @default(cuid())
+  userId      String?
+  
+  type        String   // bug, feature_request, complaint, praise, general
+  category    String?  // ui, performance, ghost_ai, features, other
+  
+  title       String
+  description String   @db.Text
+  
+  // Additional data
+  deviceInfo  Json?    // {model, os, version}
+  screenshots String[] // URLs
+  
+  // Status
+  status      String   @default("pending") // pending, reviewing, resolved, closed
+  priority    String   @default("medium") // low, medium, high, urgent
+  
+  // Admin response
+  adminResponse String? @db.Text
+  respondedAt   DateTime?
+  respondedBy   String?  // Admin ID
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([status])
+  @@index([type])
+  @@index([userId])
+  @@map("feedback")
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  subject     String
+  message     String   @db.Text
+  
+  status      String   @default("open") // open, in_progress, resolved, closed
+  priority    String   @default("normal") // low, normal, high, urgent
+  
+  // Conversation
+  messages    Json[]   // [{sender, message, timestamp}]
+  
+  assignedTo  String?  // Admin/Support ID
+  
+  resolvedAt  DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@map("support_tickets")
+}
+
+// ============================================
+// ADMIN & SYSTEM
+// ============================================
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  
+  description String?
+  
+  updatedAt   DateTime @updatedAt
+  
+  @@map("system_config")
+}
+
+model AppVersion {
+  id          String   @id @default(cuid())
+  version     String   @unique
+  platform    String   // ios, android, web
+  
+  buildNumber Int
+  
+  // Update info
+  isRequired  Boolean  @default(false)
+  releaseNotes String  @db.Text
+  downloadUrl String?
+  
+  // Features
+  newFeatures String[]
+  bugFixes    String[]
+  
+  releasedAt  DateTime @default(now())
+  
+  @@index([platform])
+  @@map("app_versions")
+}
+
+model MaintenanceMode {
+  id          String   @id @default(cuid())
+  isActive    Boolean  @default(false)
+  
+  message     String   @db.Text
+  startTime   DateTime?
+  endTime     DateTime?
+  
+  affectedServices String[] // ["chat", "quests", "leaderboard"]
+  
+  updatedAt   DateTime @updatedAt
+  
+  @@map("maintenance_mode")
 }
