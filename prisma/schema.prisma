@@ -1314,7 +1314,7 @@ model SupportTicket {
   priority    String   @default("normal") // low, normal, high, urgent
   
   // Conversation
-  messages    Json[]   // [{sender, message, timestamp}]
+  messages    Json?    // [{sender, message, timestamp}]
   
   assignedTo  String?  // Admin/Support ID
   
