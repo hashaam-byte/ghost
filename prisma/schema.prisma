@@ -830,6 +830,7 @@ model ChatMessage {
   // Message metadata
   mood        String?  // Ghost's detected mood from message
   intent      String?  // help, chat, command, question
+  tone        String?  @default("friendly") // friendly, neutral, aggressive, sarcastic, formal
   
   // Offline support
   localId     String?
