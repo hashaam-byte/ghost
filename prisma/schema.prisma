@@ -84,14 +84,10 @@ model GhostProfile {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Ghost Personality & Mode
-  
+  personality     String   @default("chill")
   mode            String   @default("normal") // normal, chaotic, soft, dark, tsundere, y2k, roadman, nigerian, baby
   voicePack       String   @default("default")
   customSlang     String[] // User's custom phrases
-    // Ghost Personality
-  personality     String   @default("chill") // chill, funny, strict, motivational, quiet
-  tone            String   @default("friendly")
-
   
   // Ghost Evolution
   evolutionStage  Int      @default(1) // 1-7 (baby to omega)
