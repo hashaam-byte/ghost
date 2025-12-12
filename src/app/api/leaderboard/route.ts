@@ -158,19 +158,22 @@ export async function GET(request: NextRequest) {
     });
 
     // Format leaderboard data
-    const formattedLeaderboard = leaderboard.map((user, index) => ({
-      rank: index + 1,
-      userId: user.id,
-      username: user.username || 'Ghost User',
-      avatar: user.avatar,
-      score: type === 'xp' ? user.ghostProfile?.totalXP :
-             type === 'aesthetic' ? user.aestheticScore :
-             type === 'streak' ? user.ghostProfile?.streakDays :
-             user.ghostProfile?.questsCompleted,
-      level: user.ghostProfile?.level || 1,
-      ghostProfile: user.ghostProfile,
-      isCurrentUser: user.id === decoded.userId,
-    }));
+    const formattedLeaderboard = leaderboard.map((user, index) => {
+      const gp = user.ghostProfile as any;
+      return {
+        rank: index + 1,
+        userId: user.id,
+        username: user.username || 'Ghost User',
+        avatar: user.avatar,
+        score: type === 'xp' ? (gp?.totalXP ?? 0) :
+               type === 'aesthetic' ? (user.aestheticScore ?? 0) :
+               type === 'streak' ? (gp?.streakDays ?? 0) :
+               (gp?.questsCompleted ?? 0),
+        level: (gp?.level ?? 1),
+        ghostProfile: gp,
+        isCurrentUser: user.id === decoded.userId,
+      };
+    });
 
     return NextResponse.json({
       leaderboard: formattedLeaderboard,
@@ -179,12 +182,15 @@ export async function GET(request: NextRequest) {
         userId: currentUser?.id,
         username: currentUser?.username,
         avatar: currentUser?.avatar,
-        score: type === 'xp' ? currentUser?.ghostProfile?.totalXP :
-               type === 'aesthetic' ? currentUser?.aestheticScore :
-               type === 'streak' ? currentUser?.ghostProfile?.streakDays :
-               currentUser?.ghostProfile?.questsCompleted,
-        level: currentUser?.ghostProfile?.level || 1,
-        ghostProfile: currentUser?.ghostProfile,
+   score: (() => {
+     const gp = currentUser?.ghostProfile as any;
+     return type === 'xp' ? (gp?.totalXP ?? 0) :
+       type === 'aesthetic' ? (currentUser?.aestheticScore ?? 0) :
+       type === 'streak' ? (gp?.streakDays ?? 0) :
+       (gp?.questsCompleted ?? 0);
+   })(),
+   level: (currentUser?.ghostProfile as any)?.level || 1,
+   ghostProfile: currentUser?.ghostProfile,
       },
       type,
       total: allUsers.length,
