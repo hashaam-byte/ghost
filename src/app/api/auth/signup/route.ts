@@ -9,6 +9,8 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password, username } = await request.json();
 
+    console.log('Sign up attempt for:', email, username);
+
     // Validate input
     if (!email || !password || !username) {
       return NextResponse.json(
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Username validation (alphanumeric, underscores, 3-20 chars)
+    // Username validation
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
     if (!usernameRegex.test(username)) {
       return NextResponse.json(
@@ -63,7 +65,9 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user with all initial data in a transaction
+    console.log('Creating user with transaction...');
+
+    // Create user with all initial data - MATCH EXACT SCHEMA FIELDS
     const user = await db.$transaction(async (tx) => {
       // Create user with ghost profile
       const newUser = await tx.user.create({
@@ -71,20 +75,30 @@ export async function POST(request: NextRequest) {
           email,
           username,
           password: hashedPassword,
+          isGuest: false,
           isOnline: true,
           lastSeen: new Date(),
           lastActive: new Date(),
+          plan: 'free',
+          isStudent: false,
+          aestheticScore: 0,
+          profileTheme: 'default',
+          lastSyncAt: new Date(),
+          offlineDataVersion: 1,
+          // Create ghost profile with EXACT schema fields
           ghostProfile: {
             create: {
               personality: 'chill',
               tone: 'friendly',
               mode: 'normal',
+              voicePack: 'default',
+              customSlang: [],
+              evolutionStage: 1,
+              ghostForm: 'baby',
               totalXP: 0,
               level: 1,
               xpToNextLevel: 100,
               coins: 0,
-              evolutionStage: 1,
-              ghostForm: 'baby',
               avatarStyle: 'basic',
               accessories: [],
               skinColor: '#FFFFFF',
@@ -114,9 +128,9 @@ export async function POST(request: NextRequest) {
               streakDays: 0,
               helpfulness: 0,
               unlockedPowers: [],
-              customSlang: [],
             },
           },
+          // Create usage stats with EXACT schema fields
           usageStats: {
             create: {
               chatCount: 0,
@@ -132,6 +146,7 @@ export async function POST(request: NextRequest) {
               lastResetDate: new Date(),
             },
           },
+          // Create leaderboard entry with EXACT schema fields
           leaderboardEntry: {
             create: {
               totalXP: 0,
@@ -144,6 +159,7 @@ export async function POST(request: NextRequest) {
               seasonPoints: 0,
             },
           },
+          // Create initial streak with EXACT schema fields
           streaks: {
             create: {
               type: 'daily_login',
@@ -154,13 +170,44 @@ export async function POST(request: NextRequest) {
             },
           },
         },
-        include: {
-          ghostProfile: true,
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          name: true,
+          avatar: true,
+          isGuest: true,
+          isOnline: true,
+          lastSeen: true,
+          communityZone: true,
+          plan: true,
+          planExpiry: true,
+          isStudent: true,
+          bio: true,
+          aestheticScore: true,
+          profileTheme: true,
+          createdAt: true,
+          updatedAt: true,
+          ghostProfile: {
+            select: {
+              id: true,
+              personality: true,
+              tone: true,
+              mode: true,
+              totalXP: true,
+              level: true,
+              coins: true,
+              evolutionStage: true,
+              ghostForm: true,
+              currentMood: true,
+            }
+          },
           usageStats: true,
           leaderboardEntry: true,
         },
       });
 
+      console.log('User created successfully:', newUser.id);
       return newUser;
     });
 
@@ -171,24 +218,58 @@ export async function POST(request: NextRequest) {
       { expiresIn: '7d' }
     );
 
-    // Return user data (without password) and token
-    const { password: _, ...userWithoutPassword } = user;
+    console.log('Token generated, returning response');
 
     return NextResponse.json({
-      user: userWithoutPassword,
+      user,
       token,
       message: 'Account created successfully',
     }, { status: 201 });
 
   } catch (error) {
     console.error('Sign up error:', error);
+    console.error('Error name:', error instanceof Error ? error.name : 'Unknown');
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown');
     
     // Handle Prisma-specific errors
     if (error instanceof Error) {
+      // Unique constraint violation
       if (error.message.includes('Unique constraint')) {
         return NextResponse.json(
           { message: 'Email or username already exists' },
           { status: 409 }
+        );
+      }
+
+      // Unknown field error (schema mismatch)
+      if (error.message.includes('Unknown field') || error.message.includes('Unknown arg')) {
+        console.error('SCHEMA MISMATCH:', error.message);
+        return NextResponse.json(
+          { 
+            message: 'Database schema error',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+          },
+          { status: 500 }
+        );
+      }
+
+      // Foreign key constraint
+      if (error.message.includes('Foreign key constraint')) {
+        return NextResponse.json(
+          { message: 'Database relationship error' },
+          { status: 500 }
+        );
+      }
+
+      // Return detailed error in development
+      if (process.env.NODE_ENV === 'development') {
+        return NextResponse.json(
+          { 
+            message: 'Sign up error',
+            error: error.message,
+            stack: error.stack?.split('\n').slice(0, 5).join('\n')
+          },
+          { status: 500 }
         );
       }
     }
