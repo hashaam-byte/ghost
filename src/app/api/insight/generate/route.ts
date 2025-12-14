@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
-import { ghostAI } from '@/src/lib/ai-client';
+import { groqAI } from '@/src/lib/ai-client';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
@@ -81,7 +81,7 @@ Focus on:
 
 Be encouraging, Gen-Z friendly, and specific. Use their actual data.`;
 
-    const aiResponse = await ghostAI.chat([
+    const aiResponse = await groqAI.chat([
       { role: 'user', content: aiPrompt }
     ], 'productive', 0.7);
 

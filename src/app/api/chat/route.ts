@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
-import { ghostAI } from '@/src/lib/ai-client';
+import { groqAI } from '@/src/lib/ai-client';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Get AI response
     const personality = user.ghostProfile?.personality || 'chill';
-    const response = await ghostAI.chat(aiMessages, personality);
+  const response = await groqAI.chat(aiMessages, personality);
 
     // Update usage stats
     if (user.plan === 'free' && user.usageStats) {

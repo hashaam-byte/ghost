@@ -383,6 +383,15 @@ Keep it under 4 sentences.`
     const response = await this.chat(messages, 'coach', 0.7);
     return response.message;
   }
+
+  // ============================================
+  // HOMEWORK SOLVER (convenience wrapper)
+  // ============================================
+  async solveHomework(problem: string, subject: string): Promise<string> {
+    const prompt = `You are a helpful ${subject} tutor. Solve the following problem step-by-step and provide a clear explanation:\n\n${problem}`;
+    const response = await this.chat([{ role: 'user', content: prompt }], 'coach', 0.2);
+    return response.message;
+  }
 }
 
 export const groqAI = new GroqAI();

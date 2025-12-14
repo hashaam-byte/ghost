@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
-import { ghostAI } from '@/src/lib/ai-client';
+import { groqAI } from '@/src/lib/ai-client';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get AI solution
-    const solution = await ghostAI.solveHomework(problem, subject);
+  const solution = await groqAI.solveHomework(problem, subject);
 
     // Parse solution into structured format
     // AI should return formatted response, but we'll structure it
