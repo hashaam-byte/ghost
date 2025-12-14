@@ -90,11 +90,20 @@ function getUserFromToken(request: NextRequest) {
             },
           });
       
-          // Award XP
+          // Award XP to ghostProfile.totalXP
           if (badge.xpReward > 0) {
-            await db.user.update({
-              where: { id: decoded.userId },
-              data: { xp: { increment: badge.xpReward } },
+            await db.ghostProfile.update({
+              where: { userId: decoded.userId },
+              data: { totalXP: { increment: badge.xpReward } },
+            });
+            // Optionally record XP history
+            await db.xPHistory.create({
+              data: {
+                userId: decoded.userId,
+                amount: badge.xpReward,
+                reason: `Unlocked badge: ${badge.name}`,
+                category: 'badge',
+              },
             });
           }
       

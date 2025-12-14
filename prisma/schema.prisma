@@ -359,6 +359,8 @@ model Badge {
   // Visual
   glowColor   String?  // Hex color for glow effect
   animation   String?  // "pulse", "rotate", "shimmer"
+  // Rewards
+  xpReward    Int      @default(0)
   
   users       UserBadge[]
   
