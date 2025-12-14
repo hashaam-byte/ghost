@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
-import { ghostAI } from '@/src/lib/ai-client';
+import { groqAI } from '@/src/lib/groq-ai-client';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Convert file to base64 for AI analysis
+    // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64 = buffer.toString('base64');
@@ -95,9 +95,14 @@ export async function POST(request: NextRequest) {
 4. Relationship patterns
 5. Recommendations for response
 
-Context: ${context || 'No additional context'}
-
-Respond in JSON format with: analysis, redFlags (array), tone, recommendation, threatLevel (low/medium/high)`;
+Give your analysis in this JSON format:
+{
+  "analysis": "detailed analysis here",
+  "redFlags": ["flag1", "flag2"],
+  "tone": "tone description",
+  "recommendation": "what to do",
+  "threatLevel": "low|medium|high"
+}`;
         break;
 
       case 'crypto':
@@ -105,13 +110,18 @@ Respond in JSON format with: analysis, redFlags (array), tone, recommendation, t
 1. Contract address validity
 2. Tokenomics red flags
 3. Rug pull indicators
-4. Team transparency
+4. Team transparency issues
 5. Community sentiment
 6. Risk score (1-10)
 
-Context: ${context || 'Crypto project analysis'}
-
-Respond in JSON format with: analysis, redFlags (array), tone, recommendation, threatLevel (low/medium/high)`;
+Return JSON:
+{
+  "analysis": "detailed analysis",
+  "redFlags": ["flag1", "flag2"],
+  "riskScore": 1-10,
+  "recommendation": "what to do",
+  "threatLevel": "low|medium|high"
+}`;
         break;
 
       case 'social':
@@ -122,9 +132,14 @@ Respond in JSON format with: analysis, redFlags (array), tone, recommendation, t
 4. Red flags or concerns
 5. Profile insights
 
-Context: ${context || 'Social media analysis'}
-
-Respond in JSON format with: analysis, redFlags (array), tone, recommendation, threatLevel (low/medium/high)`;
+Return JSON:
+{
+  "analysis": "detailed insights",
+  "redFlags": ["any concerns"],
+  "authenticity": "high|medium|low",
+  "recommendation": "advice",
+  "threatLevel": "safe|caution|warning"
+}`;
         break;
 
       default:
@@ -134,33 +149,36 @@ Respond in JSON format with: analysis, redFlags (array), tone, recommendation, t
 3. Context interpretation
 4. Recommendations
 
-Context: ${context || 'General image analysis'}
-
-Respond in JSON format with: analysis, redFlags (array), tone, recommendation, threatLevel (low/medium/high)`;
+Return JSON:
+{
+  "analysis": "what you found",
+  "redFlags": ["any issues"],
+  "tone": "overall impression",
+  "recommendation": "advice",
+  "threatLevel": "low|medium|high"
+}`;
     }
 
-    // Note: In production, you'd use Vision API (OpenAI GPT-4 Vision or similar)
-    // For now, we'll simulate with text description
-    const imageDescription = `[Image: ${file.name} - ${scanType} scan requested]`;
-    
-    const response = await ghostAI.chat([
-      {
-        role: 'user',
-        content: `${scanPrompt}\n\nImage: ${imageDescription}`
-      }
-    ], 'silent', 0.7);
+    // Use Groq Vision to analyze
+    const visionAnalysis = await groqAI.analyzeImage(
+      base64,
+      scanPrompt,
+      context || undefined
+    );
 
     // Parse AI response
     let result;
     try {
-      result = JSON.parse(response.message);
+      // Try to parse as JSON
+      const cleaned = visionAnalysis.replace(/```json\n?|\n?```/g, '').trim();
+      result = JSON.parse(cleaned);
     } catch {
-      // Fallback if AI doesn't return valid JSON
+      // Fallback if not valid JSON
       result = {
-        analysis: response.message,
+        analysis: visionAnalysis,
         redFlags: [],
         tone: 'neutral',
-        recommendation: 'Proceed with caution',
+        recommendation: 'Review carefully',
         threatLevel: 'low'
       };
     }
@@ -189,6 +207,22 @@ Respond in JSON format with: analysis, redFlags (array), tone, recommendation, t
       where: { userId: decoded.userId },
       data: {
         totalXP: { increment: 5 },
+      },
+    });
+
+    // Save scan to database
+    await db.scan.create({
+      data: {
+        userId: decoded.userId,
+        scanType,
+        description: `${scanType} scan`,
+        context: context || '',
+        analysis: result.analysis,
+        redFlags: result.redFlags || [],
+        tone: result.tone,
+        recommendation: result.recommendation,
+        threatLevel: result.threatLevel || 'low',
+        xpAwarded: 5,
       },
     });
 
