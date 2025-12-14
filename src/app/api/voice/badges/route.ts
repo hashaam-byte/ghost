@@ -90,17 +90,18 @@ function getUserFromToken(request: NextRequest) {
             },
           });
       
-          // Award XP to ghostProfile.totalXP
-          if (badge.xpReward > 0) {
+          // Award XP to ghostProfile.totalXP (badge.xpReward may not exist on the generated type)
+          const xpReward = Number((badge as any).xpReward ?? 0);
+          if (xpReward > 0) {
             await db.ghostProfile.update({
               where: { userId: decoded.userId },
-              data: { totalXP: { increment: badge.xpReward } },
+              data: { totalXP: { increment: xpReward } },
             });
             // Optionally record XP history
             await db.xPHistory.create({
               data: {
                 userId: decoded.userId,
-                amount: badge.xpReward,
+                amount: xpReward,
                 reason: `Unlocked badge: ${badge.name}`,
                 category: 'badge',
               },
@@ -110,7 +111,7 @@ function getUserFromToken(request: NextRequest) {
           return NextResponse.json({
             success: true,
             badge: userBadge,
-            xpEarned: badge.xpReward,
+            xpEarned: xpReward,
           });
         } catch (error) {
           console.error('Unlock badge error:', error);
@@ -124,14 +125,14 @@ function getUserFromToken(request: NextRequest) {
       
         // Example: { type: "xp", value: 1000 }
         if (requirement.type === 'xp') {
-          const user = await db.user.findUnique({ where: { id: userId } });
-          return (user?.xp || 0) >= requirement.value;
+          const gp = await db.ghostProfile.findUnique({ where: { userId } });
+          return (gp?.totalXP ?? 0) >= requirement.value;
         }
       
         // Example: { type: "streak", value: 7 }
         if (requirement.type === 'streak') {
           const streak = await db.streak.findFirst({
-            where: { userId, current: { gte: requirement.value } },
+            where: { userId, count: { gte: requirement.value } },
           });
           return !!streak;
         }
