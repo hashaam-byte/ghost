@@ -74,3 +74,5 @@ export async function POST_PHONE_SESSION(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to manage session' }, { status: 500 });
   }
 }
+// Expose standard Next.js handler
+export const POST = POST_PHONE_SESSION;

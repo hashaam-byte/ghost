@@ -15,13 +15,13 @@ function getUserFromToken(request: NextRequest) {
   }
 }
       // GET - Get all available badges
-      export async function GET_BADGES(request: NextRequest) {
+      export async function GET(request: NextRequest) {
         try {
           const decoded = getUserFromToken(request);
           if (!decoded) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
           }
-      
+    
           const badges = await db.badge.findMany({
             include: {
               users: {
@@ -44,7 +44,7 @@ function getUserFromToken(request: NextRequest) {
       }
       
       // POST - Check and unlock badge
-      export async function POST_UNLOCK_BADGE(request: NextRequest) {
+      export async function POST(request: NextRequest) {
         try {
           const decoded = getUserFromToken(request);
           if (!decoded) {
@@ -109,8 +109,8 @@ function getUserFromToken(request: NextRequest) {
         }
       }
       
-      async function checkBadgeRequirements(userId: string, badge: any): Promise<boolean> {
-        // Parse requirement JSON
+      async function checkBadgeRequirements(userId: string, badge: any) {
+        if (!badge?.requirement) return true;
         const requirement = JSON.parse(badge.requirement);
       
         // Example: { type: "xp", value: 1000 }

@@ -15,6 +15,10 @@ function getUserFromToken(request: NextRequest) {
   }
 }
 
+// Expose standard Next.js handlers
+export const GET = GET_APP_BLOCKS;
+export const POST = POST_APP_BLOCK;
+
 
 // POST - Block/Unblock app
 export async function POST_APP_BLOCK(request: NextRequest) {

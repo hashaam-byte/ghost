@@ -13,10 +13,10 @@ function getUserFromToken(request: NextRequest) {
   } catch {
     return null;
   }
-    }
-  
-    // POST - Create notification
-    export async function POST_NOTIFICATION(request: NextRequest) {
+}
+
+// POST - Create notification
+export async function POST_NOTIFICATION(request: NextRequest) {
       try {
         const decoded = getUserFromToken(request);
         if (!decoded) {
@@ -75,22 +75,27 @@ function getUserFromToken(request: NextRequest) {
     
     // PATCH - Mark notification as read
     export async function PATCH_NOTIFICATION(request: NextRequest) {
-      try {
-        const decoded = getUserFromToken(request);
-        if (!decoded) {
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        try {
+          const decoded = getUserFromToken(request);
+          if (!decoded) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+          }
+      
+          const { notificationId } = await request.json();
+      
+          await db.notification.update({
+            where: { id: notificationId },
+            data: { isRead: true },
+          });
+      
+          return NextResponse.json({ success: true });
+        } catch (error) {
+          console.error('Mark notification error:', error);
+          return NextResponse.json({ error: 'Failed to mark as read' }, { status: 500 });
         }
-    
-        const { notificationId } = await request.json();
-    
-        await db.notification.update({
-          where: { id: notificationId },
-          data: { isRead: true },
-        });
-    
-        return NextResponse.json({ success: true });
-      } catch (error) {
-        console.error('Mark notification error:', error);
-        return NextResponse.json({ error: 'Failed to mark as read' }, { status: 500 });
       }
-    }
+      
+  // Expose Next.js handlers
+  export const GET = GET_NOTIFICATIONS;
+  export const POST = POST_NOTIFICATION;
+  export const PATCH = PATCH_NOTIFICATION;
