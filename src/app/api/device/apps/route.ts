@@ -109,3 +109,7 @@ export async function GET_APP_USAGE(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch usage' }, { status: 500 });
   }
 }
+
+// Next.js expects handlers named GET / POST etc. Export delegates so the app-router picks them up.
+export const GET = GET_APP_USAGE;
+export const POST = POST_APP_USAGE;
