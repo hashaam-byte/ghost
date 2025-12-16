@@ -1,4 +1,4 @@
-// app/api/auth/guest/route.ts
+// app/api/auth/guest/route.ts - FIXED VERSION
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
 import jwt from 'jsonwebtoken';
@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     // Generate unique guest identifier
     const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const guestEmail = `${guestId}@ghost.temp`;
+    const guestUsername = guestId;
 
     // Create guest user in transaction
     const user = await db.$transaction(async (tx) => {
@@ -17,7 +18,8 @@ export async function POST(request: NextRequest) {
       const newUser = await tx.user.create({
         data: {
           email: guestEmail,
-          username: guestId,
+          username: guestUsername,
+          name: `Guest ${guestId.slice(-6)}`, // Short display name
           isGuest: true,
           plan: 'free',
           isOnline: true,
@@ -40,6 +42,20 @@ export async function POST(request: NextRequest) {
           roomTheme: 'default',
           roomItems: [],
           isRoomPublic: false, // Guests' rooms are private by default
+          skinColor: '#A020F0',
+          glowColor: '#A020F0',
+          auraColor: 'pink',
+          currentAnimation: 'float',
+          personalityEmoji: '👻',
+          mainFocusAreas: [],
+          timezone: 'Africa/Lagos',
+          language: 'en',
+          isMorningPerson: false,
+          procrastinates: false,
+          motivationStyle: 'positive',
+          currentMood: 'happy',
+          isSleeping: false,
+          isFloating: true,
         },
       });
 
@@ -87,13 +103,33 @@ export async function POST(request: NextRequest) {
       include: {
         ghostProfile: true,
         usageStats: true,
+        subscription: true,
       },
     });
 
+    // Map to Flutter-compatible format
+    const mappedUser = {
+      ...completeUser!,
+      displayName: completeUser!.name,
+      xp: completeUser!.ghostProfile?.totalXP || 0,
+      level: completeUser!.ghostProfile?.level || 1,
+      ghostType: completeUser!.ghostProfile?.ghostForm || 'baby',
+      ghostMood: completeUser!.ghostProfile?.currentMood || 'happy',
+      ghostColor: completeUser!.ghostProfile?.glowColor || '#8B5CF6',
+      voiceTriggerEnabled: true,
+      offlineMode: true,
+      notificationsEnabled: false, // Disabled for guests
+      locationSharingEnabled: false,
+      lastActive: completeUser!.lastActive,
+      createdAt: completeUser!.createdAt,
+      updatedAt: completeUser!.updatedAt,
+    };
+
     return NextResponse.json({
       success: true,
-      user: completeUser,
+      user: mappedUser,
       token,
+      isGuest: true,
       message: 'Guest session started! Sign up to save your progress 👻',
     });
   } catch (error) {

@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.ts
+// app/api/auth/signup/route.ts - FIXED VERSION
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/src/lib/db';
 import bcrypt from 'bcryptjs';
@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-change-this';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, username } = await request.json();
+    const { email, password, username, displayName } = await request.json();
 
     // Validate input
     if (!email || !password) {
@@ -61,8 +61,9 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Generate default username if not provided
+    // Generate default username and displayName if not provided
     const finalUsername = username || `ghost_${Date.now().toString(36)}`;
+    const finalDisplayName = displayName || finalUsername;
 
     // Create user and related records in a transaction
     const user = await db.$transaction(async (tx) => {
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
         data: {
           email: email.toLowerCase(),
           username: finalUsername.toLowerCase(),
+          name: finalDisplayName, // Map displayName to name field
           password: hashedPassword,
           plan: 'free',
           isGuest: false,
@@ -207,14 +209,31 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Return user data (without password)
+    // Return user data (without password) with Flutter-compatible field names
     const { password: _, ...userWithoutPassword } = completeUser!;
+    
+    // Map database fields to Flutter model fields
+    const mappedUser = {
+      ...userWithoutPassword,
+      displayName: userWithoutPassword.name, // Map name to displayName
+      xp: userWithoutPassword.ghostProfile?.totalXP || 0,
+      level: userWithoutPassword.ghostProfile?.level || 1,
+      ghostType: userWithoutPassword.ghostProfile?.ghostForm || 'baby',
+      ghostMood: userWithoutPassword.ghostProfile?.currentMood || 'happy',
+      ghostColor: userWithoutPassword.ghostProfile?.glowColor || '#8B5CF6',
+      voiceTriggerEnabled: true,
+      offlineMode: true,
+      notificationsEnabled: true,
+      locationSharingEnabled: false,
+      lastActive: userWithoutPassword.lastActive,
+    };
 
     return NextResponse.json({
       success: true,
-      user: userWithoutPassword,
+      user: mappedUser,
       token,
       message: 'Account created successfully! Welcome to GhostX 👻',
+      needsOnboarding: true, // Always true for new accounts
     }, { status: 201 });
   } catch (error) {
     console.error('Sign up error:', error);
