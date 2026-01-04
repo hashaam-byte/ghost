@@ -205,6 +205,7 @@ model TutorialProgress {
   
   @@unique([userId, stepKey])
   @@index([userId])
+  @@map("tutorial_progress")
 }
 
 // 🎨 Wallpaper & Theme Sync
@@ -232,6 +233,7 @@ model AppearanceSettings {
   particleDensity  Int     @default(50)
   
   updatedAt DateTime @updatedAt
+  @@map("appearance_settings")
 }
 
 // 📱 Ghost Overlay System
@@ -251,6 +253,7 @@ model GhostOverlay {
   
   lastUsedAt DateTime?
   updatedAt  DateTime @updatedAt
+  @@map("ghost_overlay")
 }
 
 model GhostOverlayLog {
@@ -266,6 +269,7 @@ model GhostOverlayLog {
   createdAt   DateTime @default(now())
   
   @@index([userId, createdAt])
+  @@map("ghost_overlay_logs")
 }
 
 // 🧠 Ghost Memory System
@@ -286,6 +290,7 @@ model GhostMemory {
   
   @@unique([userId, type, key])
   @@index([userId, type])
+  @@map("ghost_memories")
 }
 
 // 🔓 Feature Discovery System
@@ -302,6 +307,7 @@ model FeatureAccess {
   
   @@unique([userId, feature])
   @@index([userId])
+  @@map("feature_access")
 }
 
 // 🧬 Ghost Evolution History
@@ -321,6 +327,7 @@ model EvolutionHistory {
   createdAt DateTime @default(now())
   
   @@index([userId])
+  @@map("evolution_history")
 }
 
 // ============================================
